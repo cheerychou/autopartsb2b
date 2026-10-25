@@ -40,6 +40,14 @@ def resolve_name(obj, *, zh_field: str, en_field: str | None = None) -> str:
     return getattr(obj, zh_field) or ""
 
 
+def resolved_locale(obj, *, zh_field: str, en_field: str | None = None) -> str:
+    """如实返回 display_name 实际命中的回退链语言（评审：meta 不得宣称未发生的解析）。
+    entity_names ru 行接入后此函数是唯一判定点。"""
+    if en_field and getattr(obj, en_field, None):
+        return "en"
+    return "zh"
+
+
 @dataclasses.dataclass
 class FitmentQuery:
     model_id: str

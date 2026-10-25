@@ -106,11 +106,13 @@ def _can_see_unverified(request) -> bool:
     return has_permission(request.user, "catalog:write")
 
 
-def _meta(request, total=None):
+def _meta(request, total=None, resolved_locale: str | None = None):
+    """resolved_locale=实际解析语言（如实返回；评审：不得宣称请求头语言）。
+    None 时退化为回退链首段 ru（entity_names 就位前的声明性缺省）。"""
     return {
         "total": total,
         "catalog_version": Q.catalog_version(),
-        "locale": request.headers.get("Accept-Language", "ru")[:2],
+        "locale": resolved_locale or "ru",
     }
 
 
@@ -118,8 +120,10 @@ def _meta(request, total=None):
 @permission_classes([])
 def brands(request):
     """I1-1 品牌列表（找件入口）。"""
-    data = BrandBrief(Q.list_brands(), many=True).data
-    return Response({"data": data, "meta": _meta(request, len(data))})
+    qs = list(Q.list_brands())
+    data = BrandBrief(qs, many=True).data
+    loc = Q.resolved_locale(qs[0], zh_field="brand_name", en_field="brand_name_en") if qs else None
+    return Response({"data": data, "meta": _meta(request, len(data), loc)})
 
 
 @api_view(["GET"])

@@ -10,9 +10,33 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = ["*"]  # 私有化部署：由反代/部署环境收紧 🟡（deploy/ 交付时定）
+# ---- 环境分档与 fail-safe（评审二节：私有化交付应 fail-safe——生产缺配置拒绝启动，
+# 而不是带着 dev 默认值上线）。本地开发零配置可跑；production 档缺任一关键项即拒绝启动。----
+DJANGO_ENV = os.environ.get("DJANGO_ENV", "development")  # development | production
+_IS_PROD = DJANGO_ENV == "production"
+
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(
+            f"production 启动被拒绝：缺少环境变量 {name}"
+            "（fail-safe——禁止以默认值上线，评审 2026-10-25）"
+        )
+    return value
+
+
+SECRET_KEY = (
+    _require_env("DJANGO_SECRET_KEY")
+    if _IS_PROD
+    else os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
+)
+DEBUG = (not _IS_PROD) and os.environ.get("DJANGO_DEBUG", "1") == "1"
+if _IS_PROD:
+    _allowed = _require_env("DJANGO_ALLOWED_HOSTS")
+    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+else:
+    ALLOWED_HOSTS = ["*"]  # 开发档；production 由上方 fail-safe 强制显式配置
 
 INSTALLED_APPS = [
     "django.contrib.admin",

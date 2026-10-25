@@ -58,6 +58,11 @@ class Product(models.Model):
     class Meta:
         db_table = "commerce_product"
         ordering = ["-created_at"]
+        # 一个目录件同时只挂一个可售商品（storefront offer 查询单值语义；
+        # 评审二节：若一对一是有意设计就该上 unique）
+        constraints = [
+            models.UniqueConstraint(fields=["catalog_spu_id"], name="uniq_product_catalog_spu"),
+        ]
         indexes = [models.Index(fields=["catalog_spu_id"]), models.Index(fields=["is_listed"])]
 
     def __str__(self):

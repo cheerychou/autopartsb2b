@@ -203,7 +203,7 @@ def test_corporate_pending_cannot_order(listed_product):
         format="json",
     )
     assert resp.status_code == 403
-    assert "проверке" in resp.json()["error"]["message"]  # 审核中提示
+    assert resp.json()["error"]["error_code"] == "CORPORATE_PENDING"  # 审核中提示（错误码化）
 
     # 管理端审核通过（F-15 动作回写）→ 同一账号可下单
     acc = User.objects.get(username="corp_order").buyer_account

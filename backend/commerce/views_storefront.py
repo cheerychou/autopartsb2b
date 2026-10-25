@@ -26,6 +26,15 @@ from commerce.services_buyer import Buyer, register_buyer, resolve_buyer
 from commerce.services_order import OrderError, place_order
 
 
+def err(http: int, error_code: str, message_ru: str = ""):
+    """买家侧规范错误响应（26号§六 i18n）：error_code 供前端语言包渲染 ru 文案；
+    message_ru 仅俄语兜底——禁止中文直出到买家端（评审 F5 收尾）。"""
+    body = {"error": {"code": str(http), "error_code": error_code}}
+    if message_ru:
+        body["error"]["message_ru"] = message_ru
+    return Response(body, status=http)
+
+
 def _buyer_meta(request, buyer: Buyer, total=None):
     return {
         "buyer_kind": buyer.kind,
@@ -63,7 +72,7 @@ def register(request):
     s.is_valid(raise_exception=True)
     d = s.validated_data
     if User_exists(d["username"]):
-        return Response({"error": {"code": "409", "message": "用户名已存在"}}, status=409)
+        return err(409, "USERNAME_TAKEN")
     account = register_buyer(
         username=d["username"],
         password=d["password"],
@@ -111,12 +120,10 @@ def login(request):
         username=s.validated_data["username"], password=s.validated_data["password"]
     )
     if user is None:
-        return Response(
-            {"error": {"code": "401", "message": "Неверные учётные данные"}}, status=401
-        )
+        return err(401, "INVALID_CREDENTIALS", "Неверные учётные данные")
     account = getattr(user, "buyer_account", None)
     if account is None:
-        return Response({"error": {"code": "403", "message": "该账号非买家账号"}}, status=403)
+        return err(403, "NOT_BUYER_ACCOUNT")
     refresh = RefreshToken.for_user(user)
     buyer = resolve_buyer(request)  # 注：此处 token 尚未挂在请求上，显式构造
     buyer = Buyer(
@@ -158,7 +165,7 @@ def store_product(request, spu_id: uuid.UUID):
         .first()
     )
     if spu is None:
-        return Response({"error": {"code": "404", "message": "Товар не найден"}}, status=404)
+        return err(404, "NOT_FOUND", "Товар не найден")
     from catalog.views import SpuCard
 
     data = SpuCard(spu).data
@@ -203,9 +210,7 @@ def store_search_oe(request):
     buyer = resolve_buyer(request)
     q = request.query_params.get("q", "")
     if len(catalog_query.normalize_oe(q)) < 4:
-        return Response(
-            {"error": {"code": "400", "message": "Артикул слишком короткий"}}, status=400
-        )
+        return err(400, "ARTICLE_TOO_SHORT", "Артикул слишком короткий")
     direct, xref = catalog_query.search_oe(q)
     return Response(
         {
@@ -246,13 +251,12 @@ def _attach_offer(spu, buyer) -> dict:
 def _require_buyer(request, *, need_order: bool = False) -> tuple[Buyer | None, Response | None]:
     buyer = resolve_buyer(request)
     if buyer.kind == "guest":
-        return None, Response(
-            {"error": {"code": "401", "message": "Войдите в аккаунт"}}, status=401
-        )
+        return None, err(401, "LOGIN_REQUIRED")
     if need_order and not buyer.can_order:
         pending = buyer.account.verification_status == BuyerAccount.VerificationStatus.PENDING
-        msg = "Ваша компания на проверке" if pending else "Компания не прошла проверку"
-        return None, Response({"error": {"code": "403", "message": msg}}, status=403)
+        code = "CORPORATE_PENDING" if pending else "CORPORATE_REJECTED"
+        msg_ru = "Ваша компания на проверке" if pending else "Компания не прошла проверку"
+        return None, err(403, code, msg_ru)
     return buyer, None
 
 
@@ -264,21 +268,19 @@ class CartAddSerializer(serializers.Serializer):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def cart_add(request):
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     s = CartAddSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     product = Product.objects.filter(
         product_id=s.validated_data["product_id"], is_listed=True
     ).first()
     if product is None:
-        return Response({"error": {"code": "404", "message": "Товар не найден"}}, status=404)
+        return err(404, "NOT_FOUND", "Товар не найден")
     inv = getattr(product, "inventory", None)
     if inv is None or inv.quantity_available < s.validated_data["quantity"]:
-        return Response(
-            {"error": {"code": "409", "message": "Недостаточно товара на складе"}}, status=409
-        )
+        return err(409, "OUT_OF_STOCK", "Недостаточно товара на складе")
     item, created = CartItem.objects.update_or_create(
         account=buyer.account,
         product=product,
@@ -290,9 +292,9 @@ def cart_add(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def cart_view(request):
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     items = CartItem.objects.filter(account=buyer.account).select_related("product")
     data = []
     total = 0
@@ -322,9 +324,9 @@ class CheckoutSerializer(serializers.Serializer):
 @permission_classes([IsAuthenticated])
 def checkout(request):
     """F-06 下单：can_order 门控（双保险）→ 价格快照 → 原子扣库存 → 清购物车。"""
-    buyer, err = _require_buyer(request, need_order=True)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request, need_order=True)
+    if err_resp:
+        return err_resp
     s = CheckoutSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     try:
@@ -334,8 +336,7 @@ def checkout(request):
             payment_method=s.validated_data["payment_method"],
         )
     except OrderError as e:
-        # i18n（26号§六）：买家侧错误=HTTP code + 业务错误码，前端按 code 渲染 ru 语言包
-        return Response({"error": {"code": "409", "error_code": e.code}}, status=409)
+        return err(409, e.code, e.message_ru)
     return Response(
         {
             "data": {
@@ -359,9 +360,9 @@ def checkout(request):
 @permission_classes([IsAuthenticated])
 def my_orders(request):
     """F-08（部分）：我的订单列表（S3 最小；F-07 跟踪 S4）。"""
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     orders = Order.objects.filter(account=buyer.account)
     return Response(
         {
@@ -383,16 +384,16 @@ def my_orders(request):
 @permission_classes([IsAuthenticated])
 def my_order_detail(request, order_id: uuid.UUID):
     """F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。"""
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     order = (
         Order.objects.prefetch_related("items")
         .filter(order_id=order_id, account=buyer.account)
         .first()
     )
     if order is None:
-        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+        return err(404, "ORDER_NOT_FOUND", "Заказ не найден")
     return Response(
         {
             "data": {
@@ -422,18 +423,18 @@ def my_order_detail(request, order_id: uuid.UUID):
 @permission_classes([IsAuthenticated])
 def confirm_receipt(request, order_id: uuid.UUID):
     """F-07 签收：shipped→completed（买家确认收货）。"""
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
     if order is None:
-        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+        return err(404, "ORDER_NOT_FOUND", "Заказ не найден")
     try:
         from commerce import services_fulfillment
 
         services_fulfillment.complete_order(order)
     except services_fulfillment.OrderStateError as e:
-        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+        return err(409, e.code, e.message_ru)
     return Response({"data": {"order_no": order.order_no, "status": order.status}})
 
 
@@ -441,16 +442,16 @@ def confirm_receipt(request, order_id: uuid.UUID):
 @permission_classes([IsAuthenticated])
 def cancel_my_order(request, order_id: uuid.UUID):
     """买家取消自己的未付款订单（库存回补，F-12 同账）。"""
-    buyer, err = _require_buyer(request)
-    if err:
-        return err
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
     order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
     if order is None:
-        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+        return err(404, "ORDER_NOT_FOUND", "Заказ не найден")
     from commerce import services_fulfillment
 
     try:
         services_fulfillment.cancel_order(order, note="buyer cancel", cancelled_by=request.user)
     except services_fulfillment.OrderStateError as e:
-        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+        return err(409, e.code, e.message_ru)
     return Response({"data": {"order_no": order.order_no, "status": order.status}})
