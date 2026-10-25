@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import App from "./App";
+import "./styles.css";
 
 // 断网自足纪律：本应用运行时不依赖任何外部 CDN/字体/分析脚本（根 CLAUDE.md 铁律 3）
 const queryClient = new QueryClient({

@@ -1,0 +1,124 @@
+{
+  "app": { "title": "商城管理端" },
+  "nav": {
+    "products": "商品管理",
+    "inventory": "库存",
+    "orders": "订单履约",
+    "buyers": "客户审核",
+    "codes": "赋码工作台",
+    "reports": "报表",
+    "logout": "退出"
+  },
+  "auth": {
+    "login": "登录",
+    "username": "用户名",
+    "password": "密码",
+    "notAdmin": "仅管理角色可登录管理端"
+  },
+  "common": {
+    "loading": "加载中…",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "actions": "操作",
+    "empty": "暂无数据",
+    "language": "语言",
+    "success": "操作成功",
+    "back": "返回"
+  },
+  "products": {
+    "title": "商品管理（F-10/F-11）",
+    "create": "目录选件建品",
+    "code": "编码",
+    "titleRu": "俄语标题",
+    "price": "价格(₽)",
+    "window": "限时窗口(天)",
+    "listed": "在售",
+    "expired": "限时价已过期",
+    "relist": "重挂",
+    "relistPrice": "新价格(₽)",
+    "offShelf": "下架",
+    "onShelf": "上架",
+    "deactivateExpired": "批量下价到期商品",
+    "picker": {
+      "oe": "OE 号",
+      "keyword": "关键词",
+      "search": "检索候选",
+      "select": "选为可售 SKU"
+    }
+  },
+  "inventory": {
+    "title": "库存（F-12）",
+    "balance": "可用余额",
+    "record": "出入库记账",
+    "txType": "类型",
+    "inbound": "入库",
+    "outbound": "出库",
+    "adjust": "调整",
+    "quantity": "数量（出库为负）",
+    "note": "备注",
+    "updated": "更新时间"
+  },
+  "orders": {
+    "title": "订单履约（F-13/F-14）",
+    "no": "订单号",
+    "buyer": "买家",
+    "status": "状态",
+    "total": "金额(₽)",
+    "created": "创建时间",
+    "confirmPay": "确认到账",
+    "amount": "到账金额(₽)",
+    "note": "备注",
+    "ship": "发货",
+    "tracking": "物流单号",
+    "carrier": "承运商",
+    "items": "行项"
+  },
+  "buyers": {
+    "title": "客户审核（F-15）",
+    "username": "用户名",
+    "type": "类型",
+    "company": "企业",
+    "inn": "ИНН",
+    "state": "认证状态",
+    "note": "审核意见",
+    "approve": "通过",
+    "reject": "驳回",
+    "rejectNoteRequired": "驳回必须附意见"
+  },
+  "codes": {
+    "title": "赋码工作台（F-16）",
+    "batches": "批次",
+    "createBatch": "新建批次",
+    "batchNo": "批次号",
+    "customs": "报关单号",
+    "codes": "码数",
+    "import": "导入码清单",
+    "printList": "打印清单",
+    "receive": "收货验码",
+    "outbound": "按码出库",
+    "return": "退货回转",
+    "aging": "在库码账龄",
+    "codeValues": "码值（每行一个）",
+    "productId": "商品ID",
+    "gtin": "GTIN",
+    "state": "状态"
+  },
+  "reports": {
+    "title": "报表（F-17）",
+    "sales": "销售",
+    "slowMovers": "滞销",
+    "coverage": "目录覆盖",
+    "aging": "码账龄"
+  },
+  "status": {
+    "pending_payment": "待付款",
+    "awaiting_confirmation": "待确认到账",
+    "paid": "已付款",
+    "shipped": "已发货",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  "verify": { "pending": "待审核", "approved": "已认证", "rejected": "已驳回" },
+  "errors": { "generic": "操作失败", "forbidden": "无权限" }
+}

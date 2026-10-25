@@ -4,6 +4,43 @@
  */
 
 export interface paths {
+    "/api/v1/auth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 管理端登录：凭据有效但无管理角色 → 403（买家账号走 storefront 登录，两不混淆）。 */
+        post: operations["api_v1_auth_token_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/token/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Takes a refresh type JSON web token and returns an access type JSON web
+         *     token if the refresh token is valid.
+         */
+        post: operations["api_v1_auth_token_refresh_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/batches/": {
         parameters: {
             query?: never;
@@ -70,6 +107,23 @@ export interface paths {
         put?: never;
         /** @description 收货验码（labelled→in_stock，同步库存入账）；可选按码精确验收。 */
         post: operations["api_v1_batches_receive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/list/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 批次列表（贴标工作台；新→旧，含在库码计数）。 */
+        get: operations["api_v1_batches_list_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -246,6 +300,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 管理端订单查询（F-13 履约 / F-14 核销的入口列表；写操作仍走专端点）。 */
+        get: operations["api_v1_orders_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/{order_id}/confirm-payment/": {
         parameters: {
             query?: never;
@@ -278,6 +349,23 @@ export interface paths {
         put?: never;
         /** @description F-13 发货（paid→shipped）+ 物流单号录入。 */
         post: operations["api_v1_orders_ship_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 管理端订单查询（F-13 履约 / F-14 核销的入口列表；写操作仍走专端点）。 */
+        get: operations["api_v1_orders_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -679,6 +767,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/storefront/v1/cart/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 移除购物车行（F-06；quantity 置 0 语义——行删除）。 */
+        post: operations["storefront_v1_cart_remove_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/storefront/v1/checkout": {
         parameters: {
             query?: never;
@@ -846,9 +951,18 @@ export interface components {
          * @enum {string}
          */
         BuyerTypeEnum: "individual" | "corporate";
+        CartRemoveRequest: {
+            /** Format: uuid */
+            product_id: string;
+        };
+        /**
+         * @description * `bank_transfer` - bank_transfer
+         * @enum {string}
+         */
+        CheckoutPaymentMethodEnum: "bank_transfer";
         CheckoutRequest: {
             shipping_address: string;
-            payment_method: components["schemas"]["PaymentMethodEnum"];
+            payment_method: components["schemas"]["CheckoutPaymentMethodEnum"];
         };
         CodeListInRequest: {
             /** Format: uuid */
@@ -879,6 +993,56 @@ export interface components {
         LoginRequest: {
             username: string;
             password: string;
+        };
+        /** @description 管理端订单列表/详情（F-13/14 的工作集）；行项一并带出。 */
+        OrderAdmin: {
+            /** Format: uuid */
+            readonly order_id: string;
+            /** 订单号 */
+            order_no: string;
+            readonly buyer: string;
+            status?: components["schemas"]["StatusEnum"];
+            payment_method: components["schemas"]["OrderAdminPaymentMethodEnum"];
+            /**
+             * 订单总额(₽)
+             * Format: decimal
+             */
+            total_amount: string;
+            /** 收货地址 */
+            shipping_address: string;
+            /** 物流单号 */
+            tracking_no?: string;
+            /** 承运商 */
+            carrier?: string;
+            /**
+             * 核销时间
+             * Format: date-time
+             */
+            payment_confirmed_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly items: components["schemas"]["OrderItemBrief"][];
+        };
+        /**
+         * @description * `bank_transfer` - 对公转账
+         *     * `online` - 在线收单
+         * @enum {string}
+         */
+        OrderAdminPaymentMethodEnum: "bank_transfer" | "online";
+        OrderItemBrief: {
+            /** 俄语标题（快照） */
+            title_ru: string;
+            quantity: number;
+            /**
+             * 成交单价(₽)
+             * Format: decimal
+             */
+            unit_price: string;
+            /**
+             * 行金额(₽)
+             * Format: decimal
+             */
+            line_amount: string;
         };
         OutboundRequest: {
             /** Format: uuid */
@@ -917,6 +1081,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["InventoryItem"][];
         };
+        PaginatedOrderAdminList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["OrderAdmin"][];
+        };
         PaginatedProductList: {
             /** @example 123 */
             count: number;
@@ -954,11 +1133,6 @@ export interface components {
             /** 上架 */
             is_listed?: boolean;
         };
-        /**
-         * @description * `bank_transfer` - bank_transfer
-         * @enum {string}
-         */
-        PaymentMethodEnum: "bank_transfer";
         /** @description 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。 */
         Product: {
             /** Format: uuid */
@@ -1120,6 +1294,30 @@ export interface components {
             /** @default  */
             carrier: string;
         };
+        /**
+         * @description * `pending_payment` - 待付款
+         *     * `awaiting_confirmation` - 待确认到账
+         *     * `paid` - 已付款
+         *     * `shipped` - 已发货
+         *     * `completed` - 已完成
+         *     * `cancelled` - 已取消
+         * @enum {string}
+         */
+        StatusEnum: "pending_payment" | "awaiting_confirmation" | "paid" | "shipped" | "completed" | "cancelled";
+        TokenObtainPair: {
+            readonly access: string;
+            readonly refresh: string;
+        };
+        TokenObtainPairRequest: {
+            username: string;
+            password: string;
+        };
+        TokenRefresh: {
+            readonly access: string;
+        };
+        TokenRefreshRequest: {
+            refresh: string;
+        };
         TxInRequest: {
             tx_type: components["schemas"]["TxTypeEnum"];
             quantity: number;
@@ -1149,6 +1347,56 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    api_v1_auth_token_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenObtainPairRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TokenObtainPairRequest"];
+                "multipart/form-data": components["schemas"]["TokenObtainPairRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenObtainPair"];
+                };
+            };
+        };
+    };
+    api_v1_auth_token_refresh_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRefreshRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TokenRefreshRequest"];
+                "multipart/form-data": components["schemas"]["TokenRefreshRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenRefresh"];
+                };
+            };
+        };
+    };
     api_v1_batches_create: {
         parameters: {
             query?: never;
@@ -1235,6 +1483,24 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["ReceiveRequest"];
             };
         };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_batches_list_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No response body */
             200: {
@@ -1496,6 +1762,42 @@ export interface operations {
             };
         };
     };
+    api_v1_orders_list: {
+        parameters: {
+            query?: {
+                /** @description 分页结果集中的页码。 */
+                page?: number;
+                /**
+                 * @description * `bank_transfer` - 对公转账
+                 *     * `online` - 在线收单
+                 */
+                payment_method?: "bank_transfer" | "online";
+                /**
+                 * @description * `pending_payment` - 待付款
+                 *     * `awaiting_confirmation` - 待确认到账
+                 *     * `paid` - 已付款
+                 *     * `shipped` - 已发货
+                 *     * `completed` - 已完成
+                 *     * `cancelled` - 已取消
+                 */
+                status?: "awaiting_confirmation" | "cancelled" | "completed" | "paid" | "pending_payment" | "shipped";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOrderAdminList"];
+                };
+            };
+        };
+    };
     api_v1_orders_confirm_payment_create: {
         parameters: {
             query?: never;
@@ -1545,6 +1847,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    api_v1_orders_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 order 的 UUID 字符串。 */
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderAdmin"];
+                };
             };
         };
     };
@@ -2110,6 +2434,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_cart_remove_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartRemoveRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CartRemoveRequest"];
+                "multipart/form-data": components["schemas"]["CartRemoveRequest"];
+            };
+        };
         responses: {
             /** @description No response body */
             200: {

@@ -292,6 +292,28 @@ def cart_add(request):
     return Response({"data": {"quantity": item.quantity}}, status=201)
 
 
+class CartRemoveSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()
+
+
+@extend_schema(request=CartRemoveSerializer)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cart_remove(request):
+    """移除购物车行（F-06；quantity 置 0 语义——行删除）。"""
+    buyer, err_resp = _require_buyer(request)
+    if err_resp:
+        return err_resp
+    s = CartRemoveSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    deleted, _ = CartItem.objects.filter(
+        account=buyer.account, product_id=s.validated_data["product_id"]
+    ).delete()
+    if not deleted:
+        return err(404, "NOT_FOUND", "Позиция не найдена")
+    return Response({"data": {"removed": True}})
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def cart_view(request):
@@ -371,6 +393,7 @@ def my_orders(request):
         {
             "data": [
                 {
+                    "order_id": str(o.order_id),
                     "order_no": o.order_no,
                     "status": o.status,
                     "total_amount": str(o.total_amount),

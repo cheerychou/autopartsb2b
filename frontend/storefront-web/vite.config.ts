@@ -14,6 +14,7 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:8000",
       "/catalog": "http://localhost:8000",
+      "/storefront": "http://localhost:8000",
     },
   },
 });

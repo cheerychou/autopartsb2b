@@ -11,13 +11,40 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from catalog.services.query import catalog_version
 from commerce import services, services_fulfillment, services_pricing
 from commerce.models_customer import BuyerAccount
-from commerce.models_order import Order
+from commerce.models_order import Order, OrderItem
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
 from shared.permissions import RoleBasedPermission, require_permission
+
+
+class AdminTokenObtainPairView(TokenObtainPairView):
+    """管理端登录：凭据有效但无管理角色 → 403（买家账号走 storefront 登录，两不混淆）。"""
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code != status.HTTP_200_OK:
+            return response
+        from django.contrib.auth.models import User
+
+        from shared.permissions import has_any_admin_role
+
+        user = User.objects.filter(username=request.data.get("username", "")).first()
+        if user is None or not has_any_admin_role(user):
+            return Response(
+                {
+                    "error": {
+                        "code": "403",
+                        "error_code": "NOT_ADMIN_ACCOUNT",
+                        "message": "Доступ только для администраторов",
+                    }
+                },
+                status=403,
+            )
+        return response
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -177,6 +204,49 @@ class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
             {"data": {"tx_id": str(tx.tx_id), "balance_after": tx.balance_after}},
             status=status.HTTP_201_CREATED,
         )
+
+
+class OrderItemBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ["title_ru", "quantity", "unit_price", "line_amount"]
+
+
+class OrderAdminSerializer(serializers.ModelSerializer):
+    """管理端订单列表/详情（F-13/14 的工作集）；行项一并带出。"""
+
+    buyer = serializers.CharField(source="account.user.username", read_only=True)
+    items = OrderItemBriefSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            "order_id",
+            "order_no",
+            "buyer",
+            "status",
+            "payment_method",
+            "total_amount",
+            "shipping_address",
+            "tracking_no",
+            "carrier",
+            "payment_confirmed_at",
+            "created_at",
+            "items",
+        ]
+
+
+class OrderViewSet(viewsets.ReadOnlyModelViewSet):
+    """管理端订单查询（F-13 履约 / F-14 核销的入口列表；写操作仍走专端点）。"""
+
+    permission_classes = [RoleBasedPermission]
+    queryset = Order.objects.select_related("account__user").prefetch_related("items")
+    serializer_class = OrderAdminSerializer
+    filterset_fields = ["status", "payment_method"]
+    ACTION_PERMISSIONS = {
+        "list": "orders:read",
+        "retrieve": "orders:read",
+    }
 
 
 class BuyerAccountSerializer(serializers.ModelSerializer):

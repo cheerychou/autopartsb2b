@@ -45,6 +45,23 @@ def create_batch(request):
     return Response({"data": BatchSerializer(batch).data}, status=201)
 
 
+@api_view(["GET"])
+@require_permission("inventory:read")
+def batch_list(request):
+    """批次列表（贴标工作台；新→旧，含在库码计数）。"""
+    from django.db.models import Count
+
+    batches = ImportBatch.objects.annotate(code_count=Count("codes")).order_by("-created_at")
+    data = [
+        {
+            **BatchSerializer(b).data,
+            "code_count": b.code_count,
+        }
+        for b in batches
+    ]
+    return Response({"data": data, "meta": {"total": len(data)}})
+
+
 class CodeListInSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
     gtin = serializers.CharField(default="", max_length=14)

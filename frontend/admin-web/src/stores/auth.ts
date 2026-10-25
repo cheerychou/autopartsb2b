@@ -1,0 +1,35 @@
+/** 管理端会话：token 存在即视为已登录（角色判定在后端 RBAC，无权端点返回 403）。 */
+import { create } from "zustand";
+
+import { api, errCode } from "@/lib/api";
+import { clearToken, getToken, setToken } from "@/lib/token";
+
+interface AdminAuth {
+  loggedIn: boolean;
+  username: string;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+  bootstrap: () => void;
+}
+
+export const useAdminAuth = create<AdminAuth>((set) => ({
+  loggedIn: false,
+  username: "",
+  bootstrap: () => {
+    if (getToken()) set({ loggedIn: true });
+  },
+  login: async (username, password) => {
+    try {
+      const resp = await api.post("/auth/token", { username, password });
+      setToken((resp.data as { access: string }).access);
+      set({ loggedIn: true, username });
+    } catch (e) {
+      if (errCode(e) === "NOT_ADMIN_ACCOUNT") throw new Error("notAdmin");
+      throw new Error("credentials");
+    }
+  },
+  logout: () => {
+    clearToken();
+    set({ loggedIn: false, username: "" });
+  },
+}));

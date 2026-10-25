@@ -3,6 +3,58 @@ info:
   title: B1-RU API
   version: v1
 paths:
+  /api/v1/auth/token:
+    post:
+      operationId: api_v1_auth_token_create
+      description: 管理端登录：凭据有效但无管理角色 → 403（买家账号走 storefront 登录，两不混淆）。
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/auth/token/refresh:
+    post:
+      operationId: api_v1_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
   /api/v1/batches/:
     post:
       operationId: api_v1_batches_create
@@ -98,6 +150,17 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ReceiveRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/batches/list/:
+    get:
+      operationId: api_v1_batches_list_retrieve
+      description: 批次列表（贴标工作台；新→旧，含在库码计数）。
+      tags:
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -373,6 +436,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/InventoryItem'
           description: ''
+  /api/v1/orders/:
+    get:
+      operationId: api_v1_orders_list
+      description: 管理端订单查询（F-13 履约 / F-14 核销的入口列表；写操作仍走专端点）。
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - in: query
+        name: payment_method
+        schema:
+          type: string
+          enum:
+          - bank_transfer
+          - online
+        description: |-
+          * `bank_transfer` - 对公转账
+          * `online` - 在线收单
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - awaiting_confirmation
+          - cancelled
+          - completed
+          - paid
+          - pending_payment
+          - shipped
+        description: |-
+          * `pending_payment` - 待付款
+          * `awaiting_confirmation` - 待确认到账
+          * `paid` - 已付款
+          * `shipped` - 已发货
+          * `completed` - 已完成
+          * `cancelled` - 已取消
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderAdminList'
+          description: ''
   /api/v1/orders/{order_id}/confirm-payment/:
     post:
       operationId: api_v1_orders_confirm_payment_create
@@ -436,6 +549,29 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/orders/{order_id}/:
+    get:
+      operationId: api_v1_orders_retrieve
+      description: 管理端订单查询（F-13 履约 / F-14 核销的入口列表；写操作仍走专端点）。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 order 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderAdmin'
+          description: ''
   /api/v1/pricing/deactivate-expired/:
     post:
       operationId: api_v1_pricing_deactivate_expired_create
@@ -907,6 +1043,29 @@ paths:
       responses:
         '200':
           description: No response body
+  /storefront/v1/cart/remove:
+    post:
+      operationId: storefront_v1_cart_remove_create
+      description: 移除购物车行（F-06；quantity 置 0 语义——行删除）。
+      tags:
+      - storefront
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRemoveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CartRemoveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CartRemoveRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /storefront/v1/checkout:
     post:
       operationId: storefront_v1_checkout_create
@@ -1109,6 +1268,19 @@ components:
       description: |-
         * `individual` - 个人客户
         * `corporate` - 企业客户
+    CartRemoveRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+      required:
+      - product_id
+    CheckoutPaymentMethodEnum:
+      enum:
+      - bank_transfer
+      type: string
+      description: '* `bank_transfer` - bank_transfer'
     CheckoutRequest:
       type: object
       properties:
@@ -1117,7 +1289,7 @@ components:
           minLength: 1
           maxLength: 500
         payment_method:
-          $ref: '#/components/schemas/PaymentMethodEnum'
+          $ref: '#/components/schemas/CheckoutPaymentMethodEnum'
       required:
       - payment_method
       - shipping_address
@@ -1198,6 +1370,98 @@ components:
       required:
       - password
       - username
+    OrderAdmin:
+      type: object
+      description: 管理端订单列表/详情（F-13/14 的工作集）；行项一并带出。
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          readOnly: true
+        order_no:
+          type: string
+          title: 订单号
+          maxLength: 16
+        buyer:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        payment_method:
+          $ref: '#/components/schemas/OrderAdminPaymentMethodEnum'
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 订单总额(₽)
+        shipping_address:
+          type: string
+          title: 收货地址
+        tracking_no:
+          type: string
+          title: 物流单号
+          maxLength: 64
+        carrier:
+          type: string
+          title: 承运商
+          maxLength: 32
+        payment_confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 核销时间
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemBrief'
+          readOnly: true
+      required:
+      - buyer
+      - created_at
+      - items
+      - order_id
+      - order_no
+      - payment_method
+      - shipping_address
+      - total_amount
+    OrderAdminPaymentMethodEnum:
+      enum:
+      - bank_transfer
+      - online
+      type: string
+      description: |-
+        * `bank_transfer` - 对公转账
+        * `online` - 在线收单
+    OrderItemBrief:
+      type: object
+      properties:
+        title_ru:
+          type: string
+          title: 俄语标题（快照）
+          maxLength: 300
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 成交单价(₽)
+        line_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 行金额(₽)
+      required:
+      - line_amount
+      - quantity
+      - title_ru
+      - unit_price
     OutboundRequest:
       type: object
       properties:
@@ -1262,6 +1526,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/InventoryItem'
+    PaginatedOrderAdminList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderAdmin'
     PaginatedProductList:
       type: object
       required:
@@ -1316,11 +1603,6 @@ components:
         is_listed:
           type: boolean
           title: 上架
-    PaymentMethodEnum:
-      enum:
-      - bank_transfer
-      type: string
-      description: '* `bank_transfer` - bank_transfer'
     Product:
       type: object
       description: 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。
@@ -1616,6 +1898,65 @@ components:
           maxLength: 32
       required:
       - tracking_no
+    StatusEnum:
+      enum:
+      - pending_payment
+      - awaiting_confirmation
+      - paid
+      - shipped
+      - completed
+      - cancelled
+      type: string
+      description: |-
+        * `pending_payment` - 待付款
+        * `awaiting_confirmation` - 待确认到账
+        * `paid` - 已付款
+        * `shipped` - 已发货
+        * `completed` - 已完成
+        * `cancelled` - 已取消
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
     TxInRequest:
       type: object
       properties:

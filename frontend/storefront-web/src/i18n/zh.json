@@ -1,0 +1,130 @@
+{
+  "app": {
+    "title": "中国汽配商城",
+    "tagline": "中国车型配件直购"
+  },
+  "nav": {
+    "home": "首页",
+    "search": "OE 号检索",
+    "fitment": "按车找件",
+    "cart": "购物车",
+    "orders": "我的订单",
+    "login": "登录",
+    "logout": "退出",
+    "register": "注册",
+    "account": "账户"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "username": "用户名",
+    "password": "密码",
+    "phone": "手机号",
+    "buyerType": "客户类型",
+    "individual": "个人客户",
+    "corporate": "企业客户",
+    "companyName": "企业名称",
+    "inn": "ИНН（俄企税号）",
+    "corporatePending": "企业认证审核中，审核通过后方可下单。",
+    "corporateRejected": "很遗憾，企业认证未通过。",
+    "priceLoginRequired": "登录后查看价格",
+    "loginRequired": "请先登录",
+    "welcome": "欢迎，{name}！"
+  },
+  "home": {
+    "oePlaceholder": "输入 OE 号 / 货号",
+    "oeSearch": "搜索",
+    "brands": "品牌",
+    "howTitle": "如何找件",
+    "howOe": "按货号检索——精确匹配与交叉替代号",
+    "howFitment": "按车找件——品牌 → 车型 → 品类 → 配件"
+  },
+  "search": {
+    "results": "检索结果",
+    "direct": "精确匹配",
+    "cross": "交叉替代号",
+    "empty": "未找到结果",
+    "tooShort": "货号过短（至少 4 个字符）"
+  },
+  "fitment": {
+    "stepBrand": "品牌",
+    "stepSeries": "车系",
+    "stepModel": "车型",
+    "stepCategory": "品类",
+    "allCategories": "全部品类",
+    "selectModel": "请选择车型",
+    "empty": "所选条件下暂无配件"
+  },
+  "product": {
+    "oe": "货号",
+    "brand": "品牌",
+    "gtin": "GTIN",
+    "inStock": "库存：{n} 件",
+    "outOfStock": "无货",
+    "addToCart": "加入购物车",
+    "quantity": "数量",
+    "attributes": "规格参数",
+    "notFound": "商品不存在",
+    "added": "已加入购物车"
+  },
+  "cart": {
+    "empty": "购物车是空的",
+    "checkout": "去结算",
+    "total": "合计",
+    "remove": "移除"
+  },
+  "checkout": {
+    "title": "订单结算",
+    "address": "收货地址",
+    "payment": "支付方式",
+    "bankTransfer": "对公转账（账单）",
+    "paymentHint": "付款账单将随订单确认一并提供",
+    "place": "提交订单",
+    "success": "下单成功",
+    "orderNo": "订单号",
+    "goOrders": "我的订单"
+  },
+  "orders": {
+    "title": "我的订单",
+    "empty": "还没有订单",
+    "status": "状态",
+    "total": "金额",
+    "date": "日期",
+    "items": "订单明细",
+    "cancel": "取消订单",
+    "confirmReceipt": "确认收货",
+    "cancelConfirm": "确认取消该订单？",
+    "tracking": "物流单号"
+  },
+  "status": {
+    "pending_payment": "待付款",
+    "awaiting_confirmation": "待确认到账",
+    "paid": "已付款",
+    "shipped": "已发货",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  "errors": {
+    "LOGIN_REQUIRED": "请先登录",
+    "CORPORATE_PENDING": "企业认证审核中",
+    "CORPORATE_REJECTED": "企业认证未通过",
+    "OUT_OF_STOCK": "库存不足",
+    "PRICE_EXPIRED": "限时价已过期",
+    "PRICE_NOT_ACTIVE": "价格未生效",
+    "CART_EMPTY": "购物车为空",
+    "CART_UNAVAILABLE": "购物车商品已下架或过期",
+    "BUYER_NOT_ALLOWED": "当前账号不可下单",
+    "USERNAME_TAKEN": "用户名已被占用",
+    "INVALID_CREDENTIALS": "用户名或密码错误",
+    "NOT_FOUND": "未找到",
+    "ORDER_NOT_FOUND": "订单不存在",
+    "generic": "操作失败：{code}"
+  },
+  "common": {
+    "loading": "加载中…",
+    "language": "语言",
+    "back": "返回",
+    "details": "详情",
+    "amount": "金额"
+  }
+}

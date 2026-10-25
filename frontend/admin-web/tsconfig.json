@@ -1,4 +1,10 @@
 {
   "extends": "../storefront-web/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "include": ["src", "vite.config.ts"]
 }

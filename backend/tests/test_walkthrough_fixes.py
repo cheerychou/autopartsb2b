@@ -381,3 +381,73 @@ def test_order_no_retries_exhausted_business_error(monkeypatch):
     body = r.json()["error"]
     assert body["error_code"] == "ORDER_NO_CONFLICT"
     assert not _CJK.search(body.get("message_ru", ""))
+
+
+# ---------- 前端配套端点（S6）：管理端 token / 订单列表 / 批次列表 / 购物车移除 ----------
+
+
+def test_admin_token_rejects_buyer_account():
+    """买家账号调管理端登录 → 403 NOT_ADMIN_ACCOUNT（两套账号体系不混淆）。"""
+    _buyer_individual("watokenbuyer")
+    api = APIClient()
+    r = api.post(
+        "/api/v1/auth/token",
+        {"username": "watokenbuyer", "password": "Str0ngPass!"},
+        format="json",
+    )
+    assert r.status_code == 403
+    assert r.json()["error"]["error_code"] == "NOT_ADMIN_ACCOUNT"
+
+
+def test_admin_token_ok_and_orders_list():
+    """staff 走管理端 token 登录成功；订单列表可查（分页 results 含既有订单）。"""
+    _admin_with_role("staff")  # 建 staff 组用户（用户名按角色计数规则取回）
+    product = _product(code_suffix="adm")
+    _, order = _awaiting_order(product)
+    api = APIClient()
+    staff_user = User.objects.filter(groups__name="staff").first()
+    r = api.post(
+        "/api/v1/auth/token",
+        {"username": staff_user.username, "password": "x"},
+        format="json",
+    )
+    assert r.status_code == 200, r.content
+    token = r.json()["access"]
+    list_api = APIClient()
+    list_api.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    r = list_api.get("/api/v1/orders/")
+    assert r.status_code == 200, r.content
+    assert any(o["order_no"] == order.order_no for o in r.json()["results"])
+
+
+def test_cart_remove():
+    """购物车移除行（F-06 补齐；此前只能增改不能删）。"""
+    product = _product(code_suffix="rm")
+    buyer = _buyer_individual("wacartbuyer")
+    buyer.post(
+        "/storefront/v1/cart/add",
+        {"product_id": str(product.product_id), "quantity": 2},
+        format="json",
+    )
+    r = buyer.post(
+        "/storefront/v1/cart/remove",
+        {"product_id": str(product.product_id)},
+        format="json",
+    )
+    assert r.status_code == 200
+    r = buyer.get("/storefront/v1/cart")
+    assert r.json()["data"] == []
+
+
+def test_batch_list_with_code_count():
+    """批次列表（贴标工作台工作集）：新→旧 + 在库码计数。"""
+    from commerce.models_codes import ImportBatch
+
+    ImportBatch.objects.create(batch_id=uuid.uuid4(), batch_no="WA-L1")
+    ImportBatch.objects.create(batch_id=uuid.uuid4(), batch_no="WA-L2")
+    api = _admin_with_role("staff")
+    r = api.get("/api/v1/batches/list/")
+    assert r.status_code == 200, r.content
+    nos = [b["batch_no"] for b in r.json()["data"]]
+    assert nos[:2] == ["WA-L2", "WA-L1"]  # 新→旧
+    assert all(b["code_count"] == 0 for b in r.json()["data"])

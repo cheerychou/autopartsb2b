@@ -26,12 +26,18 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.0.0
         version: 5.104.5(@types/react@19.3.0)(react@19.3.1)
+      i18next:
+        specifier: ^23.16.8
+        version: 23.16.8
       react:
         specifier: ^19.2.0
         version: 19.3.1
       react-dom:
         specifier: ^19.2.0
         version: 19.3.1(react@19.3.1)
+      react-i18next:
+        specifier: ^15.7.4
+        version: 15.7.4(i18next@23.16.8)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
       react-router-dom:
         specifier: ^7.0.0
         version: 7.18.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
