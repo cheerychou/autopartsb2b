@@ -32,6 +32,7 @@
 - 用 `select_related` / `prefetch_related` 防 N+1（catalog 适配查询尤其注意 fitment→spu→brand 链）
 - 禁止硬编码字符串（品类包代码/ТН ВЭД 码走可配置字典，25号§2.2 工程含义）
 - 线格式统一 snake_case；schema 导出 `schema.yml` → 前端类型生成（禁手写 TS 类型）
+- 错误响应：`error.code`（HTTP 数值）+ `error.error_code`（稳定业务码——两端 SPA 均按语言包渲染 ru/zh，`message`/`message_ru` 仅为服务端兜底文案，禁作 UI 唯一文案）；管理端与买家侧同规范（26号§六，2026-10-25 两端双语澄清）
 
 ## RBAC（裁剪版，承 CDD3 v2.0 机制）
 

@@ -32,8 +32,8 @@ autopartsb2b/
 │   ├── schema.yml             # OpenAPI 导出 → 前端类型生成（承 CDD3 管线）
 │   └── tests/ + factories.py + pytest.ini/mypy.ini/coverage-baseline.json（R-A3）
 └── frontend/                  # pnpm monorepo（R-B 系列）
-    ├── storefront-web/        # 应用①：俄语买家商城（新建，F-01~08）
-    ├── admin-web/             # 应用②：中文管理端（新建，F-10~17；组件范式承 shared-ui）
+    ├── storefront-web/        # 应用①：买家商城（中俄双语 ru/zh；新建，F-01~08）
+    ├── admin-web/             # 应用②：管理端（中俄双语 ru/zh；新建，F-10~17；组件范式承 shared-ui）
     └── packages/
         ├── b1-atoms/          # ui-registry 全量派生（27 atoms + shadcn 分发机制 + drift 检查）
         ├── b1-shared-ui/      # 通用类拷贝（common/form/feedback/layout/data-display）
@@ -54,7 +54,7 @@ autopartsb2b/
 | 组件底座 | Base UI（@base-ui/react）+ b1-atoms registry（shadcn 分发） | ui-registry |
 | 业务组件 | StandardListPage / DataTable / SearchForm / Form(rhf+zod) / DetailPageLayout 三范式 | shared-ui |
 | 状态/数据 | Zustand（客户端）+ react-query v5 useQueryData/useMutateData（服务端） | CDD3 范式 |
-| i18n | react-i18next（storefront=ru、admin=zh；目录名走 entity_names 回退链 ru→en→zh，27号） | 接线机制 |
+| i18n | react-i18next（两端均 ru+zh 双语言包、可切换，默认 ① ru / ② zh；目录名走 entity_names 回退链 ru→en→zh，27号） | 接线机制 |
 | 图标/Token | @phosphor-icons + Icons 注册表；tokens.json（俄语西里尔字体栈核验 🟡） | 直接拷贝 |
 | 部署 | docker-compose 单部署单元；升级=拉镜像→跑迁移→导包（✅24号）；断网自足（仅支付网关+ЧЗ API 外联） | 24号纪律 |
 
@@ -78,7 +78,7 @@ autopartsb2b/
 | **S0 工程骨架** | H1–H6 全部 + 仓库结构落地 | — | `make pre-check` 全绿；两空应用可起；类型管线 round-trip 演示 | 无 |
 | **S1 catalog 域** | 受控拷贝落地（copy-ledger 归档）+ I1 全部端点 + I2 选件器 + F-21 包导入（INIT/DELTA/幂等/校验，27号§七） | F-20/21/22/23/24 | 29号§七验收 5 用例过；导入真实测试包断网可查 | ❓ PR #1079 合并 |
 | **S2 commerce 基础** | F-10 商品管理（I2 组 SKU）/ F-12 库存（warehouse 模式）/ F-15 客户（企业审核） | F-10/12/15 | 管理端可组 SKU 挂价（选件器回填 catalog_spu_id） | S1 |
-| **S3 storefront** | F-01 注册登录（俄） / F-02 按车找件 / F-03 OE 检索 / F-04 交叉号 / F-05 详情（限时价标识）/ F-06 购物车+**对公转账先行** | F-01~06 | 俄语前台按车找件→下单全流程（对公） | S1；在线支付❓网关 |
+| **S3 storefront** | F-01 注册登录（ru/zh） / F-02 按车找件 / F-03 OE 检索 / F-04 交叉号 / F-05 详情（限时价标识）/ F-06 购物车+**对公转账先行** | F-01~06 | 双语前台按车找件→下单全流程（对公） | S1；在线支付❓网关 |
 | **S4 交易闭环** | F-11 限时价引擎（30 天）/ F-13 履约 / F-14 收款对账 / F-07 订单跟踪 / F-08 个人中心 | F-07/08/11/13/14 | 26号§九 DoD 2 真实试单路径（内测） | S2+S3 |
 | **S5 赋码+报表+I4** | N2 导入式（码实例状态机/贴标工作台 F-16/收货验码/按码出库/退货回转）+ F-17 报表 + **I4 补录暂存/回流导出（排期漏项补录，评审 2026-10-25）** | F-16/17/23 + 25号 P0 | 26号§九 DoD 4 码全生命周期演练 + DoD 6 补录回流演练 | S4 |
 | **M1 收口** | 内部 alpha：全流程演示 + 断网自足验证（DoD 1）+ 包更新演练（DoD 3） | — | 26号 M1 出口 | S1–S5 |
@@ -104,7 +104,7 @@ autopartsb2b/
 | 1 | PR #1079 合并时点不确定 → S1 顺延 | S0/H 系列先行（零依赖）；S2 可与 S1 部分并行（用接口契约 mock catalog）🟡 |
 | 2 | 支付网关未定 | S3 对公先行；网关合同列入商务轨道（与供给锚同批推进） |
 | 3 | shared-ui 拷贝携带隐性业务依赖（customer/vehicle 卡片等混入） | 拷贝时按 30号§三分类白名单执行，copy-ledger 逐项登记 |
-| 4 | 俄语文案与 i18n 冷启动 | 语言包随 Sprint 就位（S3 storefront=ru 全量、admin=zh）；目录数据俄语名走 entity_names（CDD3 期 1） |
+| 4 | 俄语文案与 i18n 冷启动 | 语言包随 Sprint 就位（两端均 ru+zh 全量，默认 ① ru / ② zh）；目录数据俄语名走 entity_names（CDD3 期 1） |
 | 5 | 单维护者风险（09号§四） | H4 的 KNW 册 + copy-ledger + CLAUDE.md 三层即为此设计，S0 强制完成 |
 | 6 | 26号§十/27号§十二余留开放参数（license 校验机制等） | license 校验机制不阻塞 S0–S5（SKU-B 断网纪律下为实例侧本地校验，开发期定） |
 

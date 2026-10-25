@@ -104,7 +104,7 @@ else:
         }
     }
 
-LANGUAGE_CODE = "zh-hans"  # 管理端语言；商城内容由前端 i18n 负责（ru）
+LANGUAGE_CODE = "zh-hans"  # Django admin 兜底语言；两端 SPA 各自 i18n（均 ru+zh，26号§六）
 TIME_ZONE = "Europe/Moscow"  # 交易时区锚定俄境（对账口径）
 USE_I18N = True
 USE_TZ = True

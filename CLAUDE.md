@@ -20,8 +20,8 @@ autopartsb2b/
 │   ├── shared/             #   共享：RBAC/中间件/校验
 │   └── config/             #   settings（单租户运行）
 ├── frontend/               # pnpm monorepo
-│   ├── storefront-web/     #   俄语买家商城（F-01~08）
-│   ├── admin-web/          #   中文管理端（F-10~17）
+│   ├── storefront-web/     #   买家商城（中俄双语 ru/zh，F-01~08）
+│   ├── admin-web/          #   管理端（中俄双语 ru/zh，F-10~17）
 │   └── packages/           #   b1-atoms / b1-shared-ui / b1-shared-http / eslint-config
 ├── docs/
 │   ├── research/           # 研究过程层（01–31 号，归档不删）

@@ -6,8 +6,8 @@
 
 | 应用 | 语言 | 说明 | 目录 |
 |------|------|------|------|
-| storefront-web | 俄语（默认 ru） | 买家商城：按车找件/商品/购物车/订单（F-01~08） | `storefront-web/` |
-| admin-web | 中文（zh） | 管理端：商品/订单/库存/赋码/对账（F-10~17） | `admin-web/` |
+| storefront-web | 中俄双语（默认 ru） | 买家商城：按车找件/商品/购物车/订单（F-01~08） | `storefront-web/` |
+| admin-web | 中俄双语（默认 zh） | 管理端：商品/订单/库存/赋码/对账（F-10~17） | `admin-web/` |
 | packages/b1-atoms | — | 原子组件唯一源（shadcn registry，Base UI 底座；拷贝自 CDD3 ui-registry） | `packages/b1-atoms/` |
 | packages/b1-shared-ui | — | 通用业务组件（DataTable/StandardListPage/Form 系/反馈/布局） | `packages/b1-shared-ui/` |
 | packages/b1-shared-http | — | HTTP 边界（snake↔camel 转换/信封解包/authStorage） | `packages/b1-shared-http/` |
@@ -42,7 +42,7 @@ service 层类型/请求体**一律写 camelCase**；wire 传输自动 snake_cas
 
 ## i18n 规范
 
-- storefront-web：默认 `ru`；admin-web：默认 `zh`；全部界面文案走语言包（`src/i18n/`），**禁止硬编码文案**（26号§六）
+- **两端应用均内置 ru+zh 双语言包**（委托方 2026-10-25 澄清：双语是两端的共同要求，不存在"①=ru、②=zh"的语种切分）；默认语种 storefront=`ru`、admin=`zh`，用户可切换；全部界面文案走语言包（`src/i18n/`），**禁止硬编码文案**（26号§六）
 - 目录数据展示名不走语言包——走 I1 响应的 entity_names 回退链（ru→en→zh，27号定稿），响应含 `name_chain` 供标注"官方名/俄市俗称"
 - 俄语文案注意：西里尔字符宽度比中文/拉丁宽，容器宽度走 tokens.json 五档（dialog 480/detail 896/standard 1280/wide 1536）
 
@@ -66,7 +66,7 @@ service 层类型/请求体**一律写 camelCase**；wire 传输自动 snake_cas
 ## 命令
 
 ```bash
-pnpm --filter storefront-web dev      # 俄语商城
+pnpm --filter storefront-web dev      # 买家商城（ru/zh 双语）
 pnpm --filter admin-web dev           # 管理端
 pnpm --filter <app> build / test:run / lint / type-check
 pnpm build:all                        # CI 用
