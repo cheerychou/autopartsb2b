@@ -123,7 +123,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/orders/{order_id}/confirm-payment": {
+    "/api/v1/orders/{order_id}/confirm-payment/": {
         parameters: {
             query?: never;
             header?: never;
@@ -144,7 +144,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/orders/{order_id}/ship": {
+    "/api/v1/orders/{order_id}/ship/": {
         parameters: {
             query?: never;
             header?: never;
@@ -161,7 +161,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/pricing/deactivate-expired": {
+    "/api/v1/pricing/deactivate-expired/": {
         parameters: {
             query?: never;
             header?: never;
@@ -480,6 +480,23 @@ export interface paths {
         get: operations["storefront_v1_orders_retrieve_2"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/orders/{order_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 买家取消自己的未付款订单（库存回补，F-12 同账）。 */
+        post: operations["storefront_v1_orders_cancel_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1554,6 +1571,26 @@ export interface operations {
         };
     };
     storefront_v1_orders_retrieve_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_orders_cancel_create: {
         parameters: {
             query?: never;
             header?: never;

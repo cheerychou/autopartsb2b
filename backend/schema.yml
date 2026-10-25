@@ -216,7 +216,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/InventoryItem'
           description: ''
-  /api/v1/orders/{order_id}/confirm-payment:
+  /api/v1/orders/{order_id}/confirm-payment/:
     post:
       operationId: api_v1_orders_confirm_payment_create
       description: |-
@@ -249,7 +249,7 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v1/orders/{order_id}/ship:
+  /api/v1/orders/{order_id}/ship/:
     post:
       operationId: api_v1_orders_ship_create
       description: F-13 发货（paid→shipped）+ 物流单号录入。
@@ -279,7 +279,7 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v1/pricing/deactivate-expired:
+  /api/v1/pricing/deactivate-expired/:
     post:
       operationId: api_v1_pricing_deactivate_expired_create
       description: F-11 手动触发批量下价（定时任务 deploy/ 接线前的手动位）。
@@ -452,6 +452,8 @@ paths:
       description: I1-1 品牌列表（找件入口）。
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -468,6 +470,8 @@ paths:
         required: true
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -477,6 +481,8 @@ paths:
       description: I1-5 类目树（scope 内；v1 全量后台类目树）。
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -486,6 +492,8 @@ paths:
       description: I1-4 按车找件：车型→品类→适配件（29号§三）。
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -495,6 +503,8 @@ paths:
       description: I2-1 选件器候选检索（管理端组商品；include_unverified 仅数据员）。
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -504,6 +514,8 @@ paths:
       description: I1-6 OE 检索：精确 + 交叉号两组（自有货号检索在 commerce，由前台聚合）。
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -520,6 +532,8 @@ paths:
         required: true
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -536,6 +550,8 @@ paths:
         required: true
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -552,6 +568,8 @@ paths:
         required: true
       tags:
       - catalog
+      security:
+      - jwtAuth: []
       responses:
         '200':
           description: No response body
@@ -659,6 +677,24 @@ paths:
     get:
       operationId: storefront_v1_orders_retrieve_2
       description: F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/orders/{order_id}/cancel:
+    post:
+      operationId: storefront_v1_orders_cancel_create
+      description: 买家取消自己的未付款订单（库存回补，F-12 同账）。
       parameters:
       - in: path
         name: order_id

@@ -16,6 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from commerce.models_order import Order
+from commerce.models_product import InventoryTransaction
 
 
 class OrderStateError(Exception):
@@ -49,11 +50,14 @@ def confirm_payment(order: Order, *, confirmed_by, amount, note: str = "") -> Or
     """F-14 对公到账人工确认（核销）：awaiting_confirmation → paid。
 
     高危域约束：
+    - 行锁（select_for_update，评审二节：并发双核销窗口）+ 幂等：仅 awaiting_confirmation
+      可核销，已 paid 再次确认报错（防双花）；
     - 金额必须与订单总额一致（部分到账/多收一律拒绝——v1 不做拆单核销，
       差额处理留运营方线下与买家解决后全额录入）；
-    - 幂等：已 paid 订单再次确认报错（防重复核销）；
     - 留痕：confirmed_by + note 落库（谁核销的可追溯）。
     """
+    # 行锁重读（并发双核销窗口关闭：两请求串行化，第二个看到 PAID 即拒）
+    order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status != Order.Status.AWAITING_CONFIRMATION:
         raise OrderStateError(f"仅待确认到账订单可核销，当前: {order.status}")
     if amount != order.total_amount:
@@ -87,10 +91,23 @@ def complete_order(order: Order) -> Order:
 
 
 @transaction.atomic
-def cancel_order(order: Order, *, note: str = "") -> Order:
-    """取消：仅未付款可取消（已付款走退款，v1 拒绝——REVIEW.md 高危域）。"""
+def cancel_order(order: Order, *, note: str = "", cancelled_by=None) -> Order:
+    """取消：仅未付款可取消（已付款走退款，v1 拒绝）；**回补库存**（评审二节：
+    下单已扣库存，取消不回补=流水有出无回、账实脱钩）。回补走 F-12 同账 append-only。"""
+    order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status not in (Order.Status.PENDING_PAYMENT, Order.Status.AWAITING_CONFIRMATION):
         raise OrderStateError("已付款订单不可直接取消（退款流程另行裁定）")
     order.cancellation_note = note
     order.save(update_fields=["cancellation_note", "updated_at"])
+    # 回补库存：逐行 inbound 回冲（append-only，账实同步恢复）
+    from commerce.services import record_inventory
+
+    for item in order.items.all():
+        record_inventory(
+            item.product,
+            tx_type=InventoryTransaction.TxType.INBOUND,
+            quantity=item.quantity,
+            note=f"取消回补 {order.order_no}",
+            created_by=cancelled_by,
+        )
     return _transition(order, Order.Status.CANCELLED)

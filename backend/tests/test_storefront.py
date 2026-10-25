@@ -243,7 +243,8 @@ def test_expired_price_blocks_order(listed_product):
         format="json",
     )
     assert resp.status_code == 409
-    assert "просрочен" not in resp.json()["error"]["message"] or True  # 409 即可（俄文断言略）
+    # 下单时点先走"下架/过期剔除"（评审 F4），错误码为 CART_UNAVAILABLE——比价格校验更早拦截
+    assert resp.json()["error"]["error_code"] == "CART_UNAVAILABLE"
 
 
 def test_order_insufficient_stock_rolls_back(listed_product):

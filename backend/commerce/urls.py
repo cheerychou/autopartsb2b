@@ -23,10 +23,11 @@ storefront_patterns = [
     path("orders", views_storefront.my_orders),
     path("orders/<uuid:order_id>", views_storefront.my_order_detail),
     path("orders/<uuid:order_id>/confirm-receipt", views_storefront.confirm_receipt),
+    path("orders/<uuid:order_id>/cancel", views_storefront.cancel_my_order),
 ]
 
 admin_patterns = [
-    path("pricing/deactivate-expired", views.deactivate_expired_prices),
-    path("orders/<uuid:order_id>/confirm-payment", views.confirm_payment),
-    path("orders/<uuid:order_id>/ship", views.ship_order),
+    path("pricing/deactivate-expired/", views.deactivate_expired_prices),
+    path("orders/<uuid:order_id>/confirm-payment/", views.confirm_payment),
+    path("orders/<uuid:order_id>/ship/", views.ship_order),
 ]

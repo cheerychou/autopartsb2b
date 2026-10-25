@@ -16,6 +16,7 @@ import json
 import zipfile
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from catalog.models import Brand
 from catalog.models_category import Category, CategorySPU, PositionDict
@@ -179,6 +180,21 @@ class Command(BaseCommand):
         except KeyError:
             raise CommandError("种子包缺少 manifest.json")
 
+        # ---- 包元数据（27号§七：pack_type/schema_ver 是契约字段，非装饰）----
+        pack_type = manifest.get("pack_type", "INIT")
+        schema_ver = str(manifest.get("schema_ver", ""))
+        pack_id = str(manifest.get("version", "") or path.rsplit("/", 1)[-1])
+        if pack_type not in {"INIT", "DELTA", "SNAP"}:
+            raise CommandError(f"未知 pack_type: {pack_type}")
+
+        # ---- 幂等（包级）：同 pack_id 已登记 → no-op ----
+        from catalog.models_pack_log import CatalogPackLog
+
+        if CatalogPackLog.objects.filter(pack_id=pack_id).exists():
+            self.stdout.write(self.style.WARNING(f"包 {pack_id} 已导入过，跳过（幂等）"))
+            return
+
+        # ---- 预检（零容差，全部通过才进入导入）----
         import_order = manifest.get("import_order", [])
         unknown = [n for n in import_order if n not in IMPORTERS]
         if unknown:
@@ -199,10 +215,6 @@ class Command(BaseCommand):
         ]
         if missing_files:
             raise CommandError(f"种子包缺少数据文件: {missing_files}")
-
-        self.stdout.write(f"种子包版本: {manifest.get('version', '?')}，开始灌入…")
-        total_created = total_updated = 0
-        landed_counts = {}
         for name in import_order:
             rows = json.loads(zf.read(f"{name}.json"))
             expected = (manifest.get("counts") or {}).get(name)
@@ -210,23 +222,34 @@ class Command(BaseCommand):
                 raise CommandError(
                     f"{name} 条数与 manifest 不符（{len(rows)} != {expected}），包损坏"
                 )
-            created, updated = IMPORTERS[name](rows)
-            total_created += created
-            total_updated += updated
-            landed_counts[name] = len(rows)
-            self.stdout.write(f"  {name}: {len(rows)} 条（新建 {created}，更新 {updated}）")
 
-        # 版本登记（F-21/I3：27号§七.6，catalog_version 之源）——接入适配：
-        # 原 CDD3 SeedPackageExecution 快照语义在此对准 B1-RU 包登记
-        from catalog.models_pack_log import CatalogPackLog
-
-        CatalogPackLog.objects.get_or_create(
-            pack_id=str(manifest.get("version", "") or path.rsplit("/", 1)[-1]),
-            defaults={
-                "pack_type": "INIT",
-                "entity_counts": landed_counts,
-            },
+        # ---- 导入：单事务整体回滚（任何实体失败→库内零残留；评审 P0-2）----
+        self.stdout.write(
+            f"种子包版本: {pack_id}（{pack_type} schema={schema_ver or '?'}），开始灌入…"
         )
+        total_created = total_updated = 0
+        landed_counts: dict = {}
+        try:
+            with transaction.atomic():
+                for name in import_order:
+                    rows = json.loads(zf.read(f"{name}.json"))
+                    created, updated = IMPORTERS[name](rows)
+                    total_created += created
+                    total_updated += updated
+                    landed_counts[name] = len(rows)
+                    self.stdout.write(f"  {name}: {len(rows)} 条（新建 {created}，更新 {updated}）")
+
+                # 版本登记（F-21/I3：catalog_version 之源）——与导入同事务
+                CatalogPackLog.objects.get_or_create(
+                    pack_id=pack_id,
+                    defaults={
+                        "pack_type": pack_type,
+                        "schema_ver": schema_ver,
+                        "entity_counts": landed_counts,
+                    },
+                )
+        except Exception as e:
+            raise CommandError(f"导入失败（已整体回滚，库内零残留）: {e}")
 
         self.stdout.write(
             self.style.SUCCESS(f"✅ 种子包灌入完成：新建 {total_created}，更新 {total_updated}")

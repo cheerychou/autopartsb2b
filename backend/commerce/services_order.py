@@ -19,15 +19,24 @@ from commerce.models_product import InventoryItem, InventoryTransaction, Product
 
 
 class OrderError(Exception):
-    """下单业务校验失败（门控/库存/限时价过期）。"""
+    """下单业务校验失败。code 供前端按语言包渲染（26号§六 i18n：买家侧禁直出中文）。"""
+
+    def __init__(self, code: str, message_ru: str = ""):
+        super().__init__(code)
+        self.code = code
+        self.message_ru = message_ru
+
+    @classmethod
+    def of(cls, code: str, message_ru: str):
+        return cls(code, message_ru)
 
 
 def _effective_price(product: Product, now):
     """限时价有效性：过期价格不可成交（F-11 到期自动下价引擎前的防御）。"""
     if product.price_starts_at and now < product.price_starts_at:
-        raise OrderError("价格未生效")
+        raise OrderError.of("PRICE_NOT_ACTIVE", "价格未生效")
     if product.price_expires_at and now > product.price_expires_at:
-        raise OrderError("限时价已过期，商品待重新定价")
+        raise OrderError.of("PRICE_EXPIRED", "限时价已过期，商品待重新定价")
     return product.price_amount
 
 
@@ -45,10 +54,23 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
             if account.verification_status == BuyerAccount.VerificationStatus.PENDING
             else ""
         )
-        raise OrderError(f"当前账号不可下单{suffix}")
-    items = list(CartItem.objects.filter(account=account).select_related("product"))
+        raise OrderError.of("BUYER_NOT_ALLOWED", f"当前账号不可下单{suffix}")
+    items = list(
+        CartItem.objects.filter(account=account).select_related("product", "product__inventory")
+    )
     if not items:
-        raise OrderError("购物车为空")
+        raise OrderError.of("CART_EMPTY", "购物车为空")
+    # 下架/过期商品在下单时点剔除（评审二节：管理端下架≠可成交）
+    from django.utils import timezone as _tz
+
+    items = [
+        it
+        for it in items
+        if it.product.is_listed
+        and not (it.product.price_expires_at and it.product.price_expires_at < _tz.now())
+    ]
+    if not items:
+        raise OrderError.of("CART_UNAVAILABLE", "购物车商品已下架或过期")
 
     now = timezone.now()
     order = Order.objects.create(
@@ -65,7 +87,7 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
         price = _effective_price(product, now)
         inv, _ = InventoryItem.objects.select_for_update().get_or_create(product=product)
         if inv.quantity_available < item.quantity:
-            raise OrderError(f"库存不足: {product.title_ru} 可用 {inv.quantity_available}")
+            raise OrderError.of("OUT_OF_STOCK", f"库存不足: {product.title_ru}")
         line = price * item.quantity
         OrderItem.objects.create(
             order=order,
@@ -97,7 +119,8 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
 
 
 def _next_order_no() -> str:
-    """订单号：ORD+日期+日内序（unique 约束兜底并发）。"""
+    """订单号：ORD+日期+日内序 + 存在性重试（评审二节：并发撞号 500 修复——
+    撞号即重试递增，unique 约束为最后防线）。"""
     date_part = timezone.localdate().strftime("%Y%m%d")
     seq = Order.objects.filter(order_no__startswith=f"ORD{date_part}").count() + 1
     while Order.objects.filter(order_no=f"ORD{date_part}{seq:04d}").exists():

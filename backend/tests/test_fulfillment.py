@@ -122,8 +122,8 @@ def test_ship_requires_paid(paid_order):
     o = paid_order["order"]
     with pytest.raises(OrderStateError):  # awaiting_confirmation 直接发货=非法
         ship_order(o, tracking_no="CDEK123")
-    confirm_payment(o, confirmed_by=paid_order["boss"], amount=o.total_amount)
-    ship_order(o, tracking_no="CDEK1234567", carrier="CDEK")
+    o = confirm_payment(o, confirmed_by=paid_order["boss"], amount=o.total_amount)
+    o = ship_order(o, tracking_no="CDEK1234567", carrier="CDEK")
     o.refresh_from_db()
     assert o.status == Order.Status.SHIPPED and o.tracking_no == "CDEK1234567"
     complete_order(o)
@@ -183,8 +183,8 @@ def test_confirm_receipt_completed(paid_order):
         .access_token
     )
     buyer_api.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
-    confirm_payment(o, confirmed_by=paid_order["boss"], amount=o.total_amount)
-    ship_order(o, tracking_no="CDEK99")
+    o = confirm_payment(o, confirmed_by=paid_order["boss"], amount=o.total_amount)
+    o = ship_order(o, tracking_no="CDEK99")
     resp = buyer_api.post(f"/storefront/v1/orders/{o.order_id}/confirm-receipt")
     assert resp.status_code == 200
     o.refresh_from_db()

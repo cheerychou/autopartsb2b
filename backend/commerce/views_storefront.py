@@ -14,6 +14,7 @@ import uuid
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -261,6 +262,7 @@ class CartAddSerializer(serializers.Serializer):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def cart_add(request):
     buyer, err = _require_buyer(request)
     if err:
@@ -286,6 +288,7 @@ def cart_add(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def cart_view(request):
     buyer, err = _require_buyer(request)
     if err:
@@ -316,6 +319,7 @@ class CheckoutSerializer(serializers.Serializer):
 
 @extend_schema(request=CheckoutSerializer)
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def checkout(request):
     """F-06 下单：can_order 门控（双保险）→ 价格快照 → 原子扣库存 → 清购物车。"""
     buyer, err = _require_buyer(request, need_order=True)
@@ -330,7 +334,8 @@ def checkout(request):
             payment_method=s.validated_data["payment_method"],
         )
     except OrderError as e:
-        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+        # i18n（26号§六）：买家侧错误=HTTP code + 业务错误码，前端按 code 渲染 ru 语言包
+        return Response({"error": {"code": "409", "error_code": e.code}}, status=409)
     return Response(
         {
             "data": {
@@ -351,6 +356,7 @@ def checkout(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def my_orders(request):
     """F-08（部分）：我的订单列表（S3 最小；F-07 跟踪 S4）。"""
     buyer, err = _require_buyer(request)
@@ -374,6 +380,7 @@ def my_orders(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def my_order_detail(request, order_id: uuid.UUID):
     """F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。"""
     buyer, err = _require_buyer(request)
@@ -412,6 +419,7 @@ def my_order_detail(request, order_id: uuid.UUID):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def confirm_receipt(request, order_id: uuid.UUID):
     """F-07 签收：shipped→completed（买家确认收货）。"""
     buyer, err = _require_buyer(request)
@@ -424,6 +432,25 @@ def confirm_receipt(request, order_id: uuid.UUID):
         from commerce import services_fulfillment
 
         services_fulfillment.complete_order(order)
+    except services_fulfillment.OrderStateError as e:
+        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+    return Response({"data": {"order_no": order.order_no, "status": order.status}})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_my_order(request, order_id: uuid.UUID):
+    """买家取消自己的未付款订单（库存回补，F-12 同账）。"""
+    buyer, err = _require_buyer(request)
+    if err:
+        return err
+    order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
+    if order is None:
+        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+    from commerce import services_fulfillment
+
+    try:
+        services_fulfillment.cancel_order(order, note="buyer cancel", cancelled_by=request.user)
     except services_fulfillment.OrderStateError as e:
         return Response({"error": {"code": "409", "message": str(e)}}, status=409)
     return Response({"data": {"order_no": order.order_no, "status": order.status}})

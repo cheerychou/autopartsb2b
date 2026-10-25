@@ -244,6 +244,11 @@ def test_i3_import_unknown_entity_skip_and_strict(tmp_path):
     call_command("import_seed_package", "--package", pkg)  # 默认 skip 不炸
     assert Brand.objects.filter(brand_code="ZTST").count() == 1
     pkg3 = str(tmp_path / "p3.zip")
-    _make_package(pkg3, order=["brands", "future_entity"], counts={"brands": 1, "future_entity": 3})
+    _make_package(
+        pkg3,
+        version="test-strict",
+        order=["brands", "future_entity"],
+        counts={"brands": 1, "future_entity": 3},
+    )
     with pytest.raises(CommandError):
         call_command("import_seed_package", "--package", pkg3, "--strict")

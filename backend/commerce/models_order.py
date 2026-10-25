@@ -89,12 +89,3 @@ class OrderItem(models.Model):
 
     class Meta:
         db_table = "commerce_order_item"
-
-
-def next_order_no() -> str:
-    """订单号：ORD + 日期 + 序（v1 简单实现；unique 兜底并发）。"""
-    from django.utils import timezone
-
-    date_part = timezone.localdate().strftime("%Y%m%d")
-    seq = Order.objects.filter(order_no__startswith=f"ORD{date_part}").count() + 1
-    return f"ORD{date_part}{seq:04d}"

@@ -15,7 +15,7 @@ from commerce import services, services_fulfillment
 from commerce.models_customer import BuyerAccount
 from commerce.models_order import Order
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
-from shared.permissions import RoleBasedPermission
+from shared.permissions import RoleBasedPermission, require_permission
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -210,6 +210,7 @@ class BuyerAccountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(["POST"])
+@require_permission("products:write")
 def deactivate_expired_prices(request):
     """F-11 手动触发批量下价（定时任务 deploy/ 接线前的手动位）。"""
     from commerce.services_pricing import deactivate_expired_prices as run
@@ -225,6 +226,7 @@ class ConfirmPaymentSerializer(serializers.Serializer):
 
 @extend_schema(request=ConfirmPaymentSerializer)
 @api_view(["POST"])
+@require_permission("payments:manage")
 def confirm_payment(request, order_id):
     """F-14 对公到账人工确认核销（awaiting_confirmation→paid）。
 
@@ -254,6 +256,7 @@ class ShipSerializer(serializers.Serializer):
 
 @extend_schema(request=ShipSerializer)
 @api_view(["POST"])
+@require_permission("orders:write")
 def ship_order(request, order_id):
     """F-13 发货（paid→shipped）+ 物流单号录入。"""
     order = get_object_or_404(Order, order_id=order_id)

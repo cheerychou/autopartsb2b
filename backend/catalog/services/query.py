@@ -84,6 +84,10 @@ def list_categories_tree():
 def fitment_spus(query: FitmentQuery):
     """按车找件：车型→适配→SPU 卡片（29号 I1-4）。
 
+    verified 门控（评审 P0-3 修复）：include_unverified 不再由请求参数直接决定，
+    而是由视图层按调用者角色（catalog:write = data_steward/owner）判定后传入——
+    匿名传参无效。
+
     车型/适配数据未随当前包下发（CDD3 现包 8 实体不含 fitment 主链，
     G-02 期 1 补齐）时返回空集——接口行为先固定，数据到位即通。
     """
@@ -153,8 +157,11 @@ def spu_interchanges(spu_id: str):
     )
 
 
-def picker_candidates(*, model_id=None, oe=None, category_id=None, q=None):
-    """I2 选件器（29号§四）：宽松多条件组合；门控由视图按角色决定。"""
+def picker_candidates(*, model_id=None, oe=None, category_id=None, q=None, verified_only=True):
+    """I2 选件器（29号§四）：宽松多条件组合。
+
+    verified_only=True 时排除"仅有未验证适配行"的 SPU（评审 P0-3：I2 不得无门控）。
+    """
     qs = SPU.objects.filter(spu_status="active").select_related("brand_id")
     if oe:
         qs = qs.filter(oe_number__in=oe_variants(oe))
@@ -164,4 +171,10 @@ def picker_candidates(*, model_id=None, oe=None, category_id=None, q=None):
         qs = qs.filter(spu_name__icontains=q)
     if model_id:
         qs = qs.filter(fitments__submodel_id=model_id).distinct()
+        if verified_only:
+            qs = (
+                qs.exclude(fitments__verified_status="unverified")
+                .filter(fitments__verified_status="verified")
+                .distinct()
+            )
     return qs.order_by("spu_code")

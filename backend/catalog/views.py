@@ -6,7 +6,7 @@ storefront 层）；include_unverified 仅管理端数据员（v1 信任内网 +
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from catalog.models import Brand, VehicleModel, VehicleSeries
@@ -14,6 +14,7 @@ from catalog.models_category import Category
 from catalog.models_fitment import SPUFitment
 from catalog.models_product import SPU
 from catalog.services import query as Q
+from shared.permissions import has_permission
 
 
 class BrandBrief(serializers.ModelSerializer):
@@ -100,6 +101,11 @@ class SpuCard(serializers.ModelSerializer):
         return {"brand_id": str(obj.brand_id_id), "display_name": obj.brand_id.brand_name}
 
 
+def _can_see_unverified(request) -> bool:
+    """未验证目录数据可见性 = catalog:write 权限（data_steward/owner）；匿名/买家恒 False。"""
+    return has_permission(request.user, "catalog:write")
+
+
 def _meta(request, total=None):
     return {
         "total": total,
@@ -109,7 +115,6 @@ def _meta(request, total=None):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def brands(request):
     """I1-1 品牌列表（找件入口）。"""
@@ -118,7 +123,6 @@ def brands(request):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def series(request, brand_id: str):
     """I1-2 车系列表。"""
@@ -127,7 +131,6 @@ def series(request, brand_id: str):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def models(request, series_id: str):
     """I1-3 车型列表（含配置摘要）。"""
@@ -136,7 +139,6 @@ def models(request, series_id: str):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def categories_tree(request):
     """I1-5 类目树（scope 内；v1 全量后台类目树）。"""
@@ -145,7 +147,6 @@ def categories_tree(request):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def fitments(request):
     """I1-4 按车找件：车型→品类→适配件（29号§三）。"""
@@ -158,7 +159,8 @@ def fitments(request):
         q=request.query_params.get("q") or None,
         page=int(request.query_params.get("page", 1)),
         page_size=min(int(request.query_params.get("page_size", 20)), 100),
-        verified_only=request.query_params.get("include_unverified") != "true",
+        # 评审 P0-3：include_unverified 绑角色（catalog:write=data_steward/owner），匿名传参无效
+        verified_only=not _can_see_unverified(request),
     )
     total, rows = Q.fitment_spus(query)
     data = []
@@ -177,7 +179,6 @@ def fitments(request):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def search_oe(request):
     """I1-6 OE 检索：精确 + 交叉号两组（自有货号检索在 commerce，由前台聚合）。"""
@@ -197,7 +198,6 @@ def search_oe(request):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def spu_detail(request, spu_id: str):
     """I1-8 SPU 详情（属性值/适配摘要；价格由 commerce 挂关联键）。"""
@@ -231,7 +231,6 @@ def spu_detail(request, spu_id: str):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def spu_interchanges(request, spu_id: str):
     """I1-7 交叉号展开（一个 OE → 多货号，F-04）。"""
@@ -249,7 +248,6 @@ def spu_interchanges(request, spu_id: str):
 
 
 @api_view(["GET"])
-@authentication_classes([])
 @permission_classes([])
 def picker_candidates(request):
     """I2-1 选件器候选检索（管理端组商品；include_unverified 仅数据员）。"""
@@ -258,6 +256,7 @@ def picker_candidates(request):
         oe=request.query_params.get("oe") or None,
         category_id=request.query_params.get("category_id") or None,
         q=request.query_params.get("q") or None,
+        verified_only=not _can_see_unverified(request),
     )[:100]
     return Response({"data": SpuCard(rows, many=True).data, "meta": _meta(request, len(rows))})
 

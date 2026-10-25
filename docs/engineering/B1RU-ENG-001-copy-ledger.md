@@ -29,7 +29,7 @@ updated_at: 2026-10-25
 
 | # | 动作 | 来源 | 前置 | 状态 |
 |---|---|---|---|---|
-| R-A1 | 2026-10-25 | `backend/data_platform/`：models.py + choices.py + models_category/padb/product/fitment/terminology/epc/vin_cache.py + serializers_fitment.py + brand_letter.py + management/commands/{import,export}_standalone_seed.py | `backend/catalog/` | **基准=origin/main `f9d40417`**（含 PR #1079 `f396dbcc`；本地 HEAD `5bd54e32` 未触及 data_platform，已核实 diff 为空） | **接入适配（非模型修改）**：①apps.py `label="data_platform"`（FK 字符串引用解析）；②import 路径 `data_platform.`→`catalog.`；③models.py 剥 SeedPackageExecution（28a Q1）；④导入命令剥 labor_spus/labor_part_bindings/administrative_divisions 三实体（27号§一不入包清单）；⑤db_table 前缀保留 `data_platform_`；⑥模型结构零修改 | AI（S1） |
+| R-A1 | 2026-10-25 | `backend/data_platform/`：models.py + choices.py + models_category/padb/product/fitment/terminology/epc/vin_cache.py + brand_letter.py + management/commands/import_seed_package.py | `backend/catalog/` | **基准=origin/main `f9d40417`**（含 PR #1079 `f396dbcc`；本地 HEAD `5bd54e32` 未触及 data_platform，已核实 diff 为空） | **接入适配（非模型修改）**：①apps.py `label="data_platform"`（FK 字符串引用解析）；②import 路径 `data_platform.`→`catalog.`；③models.py 剥 SeedPackageExecution（28a Q1）；④导入命令剥 labor_spus/labor_part_bindings/administrative_divisions 三实体（27号§一不入包清单）；⑤db_table 前缀保留 `data_platform_`；⑥模型结构零修改 | AI（S1） |
 | R-A1 | 2026-10-25 | —— | `backend/catalog/migrations/0001_init_catalog_domain.py` | —— | 本仓首次生成（非拷贝）；表名沿用 CDD3 前缀 | AI（S1） |
 | R-A1+ | 2026-10-25 | 接入适配补充（同 R-A1 基准）：①import_seed_package.py 增 **--strict / 默认 skip-unknown+告警**（G6 前向兼容，28a Q6 对称实现）；②命令尾部快照登记 **SeedPackageExecution→CatalogPackLog**（F-21/I3 版本登记之源，catalog_version）；③`ready()` 显式注册 models_* 子集（承 CDD3 DataPlatformConfig.ready 机制） | `backend/catalog/` | f9d40417 | 均"接入适配"非模型修改 | AI（S1） |
 | 新增 | 2026-10-25 | ——（本仓新建，非拷贝） | `catalog/models_pack_log.py` + `migrations/0002_add_pack_log.py`；`catalog/services/query.py`（I1 服务层：名称回退链/verified 门控/OE 多形态/双向交叉号）；`catalog/views.py`+`urls.py`（I1 九端点+I2 选件器，匿名放行） | —— | 29号契约的 S1 实现 | AI（S1） |
@@ -49,3 +49,17 @@ updated_at: 2026-10-25
 | 2026-10-25 | Makefile / docker-compose.dev.yml / .github/workflows/ci-test.yml | 同名文件 | 裁剪重写：服务集与命令按本仓结构 |
 | 2026-10-25 | .zcode/skills/ 四技能 | 同名四技能（b1-guardrails 等） | 骨架照抄、内容重写 |
 | 2026-10-25 | FND-GOV-001/002/004 + doc hooks | B1RU-GOV-001 + scripts/ci/doc-* | 机制照抄、编号改 B1RU 前缀 |
+
+## 基准证据链（评审 2026-10-25 要求：可复核 hash）
+
+- 拷贝执行时声明基准：origin/main `f9d4041755b3f19a2ed505024993fb62d83e4807`（含 PR #1079=`f396dbcc`）；
+- 实际拷贝来源工作树 HEAD：`5bd54e325eae505d68b9a99aae0d6494046c6796`（已核实 `git diff f9d40417..5bd54e32 -- backend/data_platform` 为空——两版本 data_platform 无差异）；
+- CDD3 仓后续推进（2026-10-25 21:20）：`b587c1b8`——**此时尚未拉取**，下次拷贝（S5 前）先 fetch 并以新 main 头重新核对；
+- 复核命令（在 CDD3 仓执行）：`git log origin/main -1 --format="%H"` + `git diff <登记基准>..HEAD --stat -- backend/data_platform`。
+
+## 评审后剔除（2026-10-25 评审 F5）
+
+| 来源 | 剔除物 | 理由 |
+|---|---|---|
+| catalog/serializers_fitment.py | 整文件删除（228 行） | 全仓零消费者（I1 服务层自带投影），拷贝死代码违背受控拷贝目的；如需序列化面对照上游按需重拷 |
+| catalog/management/commands/export_standalone_seed.py | 已于 S1 剔除（见上） | 总仓侧工具 |
