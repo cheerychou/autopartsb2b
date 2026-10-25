@@ -148,11 +148,12 @@ def test_individual_skips_verification():
 
 @pytest.mark.django_db
 def test_admin_endpoints_reject_anonymous(catalog_spu):
-    """管理端接口走全局 RBAC 默认链：匿名 403（区别于 catalog I1 匿名放行）。"""
+    """管理端接口走全局 RBAC 默认链：匿名拒绝（401 未认证/S3 起 SimpleJWT 带
+    WWW-Authenticate；区别于 catalog I1 匿名放行）。"""
     anon = APIClient()
-    assert anon.get("/api/v1/products/").status_code == 403
-    assert anon.post("/api/v1/products/", {}, format="json").status_code == 403
-    assert anon.get("/api/v1/buyer-accounts/").status_code == 403
+    assert anon.get("/api/v1/products/").status_code in (401, 403)
+    assert anon.post("/api/v1/products/", {}, format="json").status_code in (401, 403)
+    assert anon.get("/api/v1/buyer-accounts/").status_code in (401, 403)
 
 
 @pytest.mark.django_db

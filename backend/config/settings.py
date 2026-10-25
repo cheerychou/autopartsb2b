@@ -89,11 +89,12 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 认证：S3 接入 djangorestframework-simplejwt（管理端 RBAC + 买家 JWT 双形态，31号§五）。
-# S0 仅 catalog 只读（I1 匿名可访问）+ 健康探针，故留空；接入时改为
-# ["rest_framework_simplejwt.authentication.JWTAuthentication"]
+# 认证（S3 起）：SimpleJWT——买家 storefront 与管理端共用签发体系（买家 token 关联
+# buyer_account，门控在 services_buyer.resolve_buyer；管理端走 RBAC 默认链）
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "shared.permissions.RoleBasedPermission",
     ],

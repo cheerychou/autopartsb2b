@@ -314,6 +314,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/storefront/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-01 登录：返回 JWT 与形态/资格（前端据此渲染门控）。 */
+        post: operations["storefront_v1_auth_login_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-01 注册：individual 即用；corporate 落 pending 待管理端审核（F-15）。 */
+        post: operations["storefront_v1_auth_register_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["storefront_v1_cart_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/cart/add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["storefront_v1_cart_add_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-06 下单：can_order 门控（双保险）→ 价格快照 → 原子扣库存 → 清购物车。 */
+        post: operations["storefront_v1_checkout_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-08（部分）：我的订单列表（S3 最小；F-07 跟踪 S4）。 */
+        get: operations["storefront_v1_orders_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/store/products/{spu_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-05 商品页：I1 详情代理 + 限时价/库存（价格按形态门控）。 */
+        get: operations["storefront_v1_store_products_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/store/search/oe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-03 OE 检索代理（I1 search/oe + 各结果挂 offer 价格门控）。 */
+        get: operations["storefront_v1_store_search_oe_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -357,6 +491,10 @@ export interface components {
          * @enum {string}
          */
         BuyerTypeEnum: "individual" | "corporate";
+        CheckoutRequest: {
+            shipping_address: string;
+            payment_method: components["schemas"]["PaymentMethodEnum"];
+        };
         DecisionRequest: {
             /** @default  */
             note: string;
@@ -369,6 +507,10 @@ export interface components {
             quantity_available?: number;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        LoginRequest: {
+            username: string;
+            password: string;
         };
         PaginatedBuyerAccountList: {
             /** @example 123 */
@@ -437,6 +579,11 @@ export interface components {
             /** 上架 */
             is_listed?: boolean;
         };
+        /**
+         * @description * `bank_transfer` - bank_transfer
+         * @enum {string}
+         */
+        PaymentMethodEnum: "bank_transfer";
         /** @description 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。 */
         Product: {
             /** Format: uuid */
@@ -568,6 +715,17 @@ export interface components {
             is_listed?: boolean;
             /** @default 30 */
             price_days: number;
+        };
+        RegisterRequest: {
+            username: string;
+            password: string;
+            /** @default  */
+            phone: string;
+            buyer_type: components["schemas"]["BuyerTypeEnum"];
+            /** @default  */
+            company_name_ru: string;
+            /** @default  */
+            inn: string;
         };
         TxInRequest: {
             tx_type: components["schemas"]["TxTypeEnum"];
@@ -1086,6 +1244,170 @@ export interface operations {
             path: {
                 spu_id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_auth_login_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LoginRequest"];
+                "multipart/form-data": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_auth_register_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RegisterRequest"];
+                "multipart/form-data": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_cart_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_cart_add_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_checkout_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CheckoutRequest"];
+                "multipart/form-data": components["schemas"]["CheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_orders_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_store_products_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spu_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_store_search_oe_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

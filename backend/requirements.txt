@@ -7,3 +7,4 @@ psycopg[binary]>=3.2
 redis>=5.0
 celery>=5.4
 python-dotenv>=1.0
+djangorestframework-simplejwt>=5.3

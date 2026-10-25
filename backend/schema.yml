@@ -41,6 +41,8 @@ paths:
           * `rejected` - 已驳回
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -61,6 +63,8 @@ paths:
         required: true
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -92,6 +96,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DecisionRequest'
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -123,6 +129,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/DecisionRequest'
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -143,6 +151,8 @@ paths:
           type: integer
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -163,6 +173,8 @@ paths:
         required: true
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -195,6 +207,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TxInRequest'
         required: true
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -215,6 +229,8 @@ paths:
           type: integer
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -239,6 +255,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductWriteRequest'
         required: true
+      security:
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -260,6 +278,8 @@ paths:
         required: true
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -292,6 +312,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductRequest'
         required: true
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -323,6 +345,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedProductRequest'
+      security:
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -343,6 +367,8 @@ paths:
         required: true
       tags:
       - api
+      security:
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -455,6 +481,135 @@ paths:
       responses:
         '200':
           description: No response body
+  /storefront/v1/auth/login:
+    post:
+      operationId: storefront_v1_auth_login_create
+      description: F-01 登录：返回 JWT 与形态/资格（前端据此渲染门控）。
+      tags:
+      - storefront
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/auth/register:
+    post:
+      operationId: storefront_v1_auth_register_create
+      description: F-01 注册：individual 即用；corporate 落 pending 待管理端审核（F-15）。
+      tags:
+      - storefront
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/cart:
+    get:
+      operationId: storefront_v1_cart_retrieve
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/cart/add:
+    post:
+      operationId: storefront_v1_cart_add_create
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/checkout:
+    post:
+      operationId: storefront_v1_checkout_create
+      description: F-06 下单：can_order 门控（双保险）→ 价格快照 → 原子扣库存 → 清购物车。
+      tags:
+      - storefront
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/orders:
+    get:
+      operationId: storefront_v1_orders_retrieve
+      description: F-08（部分）：我的订单列表（S3 最小；F-07 跟踪 S4）。
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/store/products/{spu_id}:
+    get:
+      operationId: storefront_v1_store_products_retrieve
+      description: F-05 商品页：I1 详情代理 + 限时价/库存（价格按形态门控）。
+      parameters:
+      - in: path
+        name: spu_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/store/search/oe:
+    get:
+      operationId: storefront_v1_store_search_oe_retrieve
+      description: F-03 OE 检索代理（I1 search/oe + 各结果挂 offer 价格门控）。
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
 components:
   schemas:
     BuyerAccount:
@@ -526,6 +681,18 @@ components:
       description: |-
         * `individual` - 个人客户
         * `corporate` - 企业客户
+    CheckoutRequest:
+      type: object
+      properties:
+        shipping_address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+      required:
+      - payment_method
+      - shipping_address
     DecisionRequest:
       type: object
       properties:
@@ -556,6 +723,19 @@ components:
       - product
       - product_code
       - updated_at
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
     PaginatedBuyerAccountList:
       type: object
       required:
@@ -656,6 +836,11 @@ components:
         is_listed:
           type: boolean
           title: 上架
+    PaymentMethodEnum:
+      enum:
+      - bank_transfer
+      type: string
+      description: '* `bank_transfer` - bank_transfer'
     Product:
       type: object
       description: 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。
@@ -870,6 +1055,38 @@ components:
       - catalog_spu_id
       - price_amount
       - title_ru
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        phone:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 20
+        buyer_type:
+          $ref: '#/components/schemas/BuyerTypeEnum'
+        company_name_ru:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 300
+        inn:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 12
+      required:
+      - buyer_type
+      - password
+      - username
     TxInRequest:
       type: object
       properties:
@@ -905,3 +1122,8 @@ components:
         * `pending` - 待审核
         * `approved` - 已认证
         * `rejected` - 已驳回
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

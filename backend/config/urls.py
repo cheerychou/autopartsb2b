@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
+from commerce import urls as commerce_urls
+
 
 def health(_request):
     """部署健康探针（deploy/ 交付单元使用）。"""
@@ -20,4 +22,6 @@ urlpatterns = [
     path("catalog/v1/", include("catalog.urls")),
     # 交易域接口（commerce，RBAC 默认权限链）
     path("api/v1/", include("commerce.urls")),
+    # 买家侧 storefront API（S3；游客匿名+三形态门控在视图层）
+    path("storefront/v1/", include(commerce_urls.storefront_patterns)),
 ]

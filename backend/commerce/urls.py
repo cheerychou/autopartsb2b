@@ -3,7 +3,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from commerce import views
+from commerce import views, views_storefront
 
 router = DefaultRouter()
 router.register("products", views.ProductViewSet, basename="products")
@@ -11,3 +11,14 @@ router.register("inventory", views.InventoryViewSet, basename="inventory")
 router.register("buyer-accounts", views.BuyerAccountViewSet, basename="buyer-accounts")
 
 urlpatterns = [path("", include(router.urls))]
+
+storefront_patterns = [
+    path("auth/register", views_storefront.register),
+    path("auth/login", views_storefront.login),
+    path("store/products/<uuid:spu_id>", views_storefront.store_product),
+    path("store/search/oe", views_storefront.store_search_oe),
+    path("cart", views_storefront.cart_view),
+    path("cart/add", views_storefront.cart_add),
+    path("checkout", views_storefront.checkout),
+    path("orders", views_storefront.my_orders),
+]
