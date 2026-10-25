@@ -115,6 +115,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # 认证（S3 起）：SimpleJWT——买家 storefront 与管理端共用签发体系（买家 token 关联
 # buyer_account，门控在 services_buyer.resolve_buyer；管理端走 RBAC 默认链）
+# ---- 离线 license（D3-A，2026-10-26）：文件验签、信息性校验（shared/licensing.py）----
+LICENSE_FILE = os.environ.get("B1RU_LICENSE_FILE", str(BASE_DIR / "license.json"))
+LICENSE_PUBLIC_KEY = os.environ.get(
+    "B1RU_LICENSE_PUBLIC_KEY", str(BASE_DIR / "shared" / "license_public_key.pem")
+)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",

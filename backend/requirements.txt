@@ -8,3 +8,4 @@ redis>=5.0
 celery>=5.4
 python-dotenv>=1.0
 djangorestframework-simplejwt>=5.3
+cryptography>=42  # license 验签（Ed25519，D3-A）+ SimpleJWT RS 系备用

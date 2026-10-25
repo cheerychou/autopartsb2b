@@ -17,18 +17,37 @@ from catalog.services import query as Q
 from shared.permissions import has_permission
 
 
-class BrandBrief(serializers.ModelSerializer):
+class NameChainMixin(serializers.Serializer):
+    """29号§二：I1 实体卡片统一附 name_chain（官方名/俄市俗称标注原料）。
+
+    须以 Serializer 为基——纯 mixin 的声明字段不会被 DRF 元类收进 declared_fields。
+    """
+
+    name_chain = serializers.SerializerMethodField()
+
+    def get_name_chain(self, obj):
+        return Q.name_chain(obj)
+
+
+class BrandBrief(NameChainMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Brand
-        fields = ["brand_id", "brand_code", "display_name", "brand_letter", "brand_logo"]
+        fields = [
+            "brand_id",
+            "brand_code",
+            "display_name",
+            "name_chain",
+            "brand_letter",
+            "brand_logo",
+        ]
 
     def get_display_name(self, obj):
         return Q.resolve_name(obj, zh_field="brand_name", en_field="brand_name_en")
 
 
-class SeriesBrief(serializers.ModelSerializer):
+class SeriesBrief(NameChainMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -37,6 +56,7 @@ class SeriesBrief(serializers.ModelSerializer):
             "series_id",
             "series_code",
             "display_name",
+            "name_chain",
             "vehicle_class",
             "year_from",
             "year_to",
@@ -46,13 +66,13 @@ class SeriesBrief(serializers.ModelSerializer):
         return Q.resolve_name(obj, zh_field="series_name", en_field="series_name_en")
 
 
-class ModelBrief(serializers.ModelSerializer):
+class ModelBrief(NameChainMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
     spec_summary = serializers.SerializerMethodField()
 
     class Meta:
         model = VehicleModel
-        fields = ["model_id", "model_code", "display_name", "spec_summary", "status"]
+        fields = ["model_id", "model_code", "display_name", "name_chain", "spec_summary", "status"]
 
     def get_display_name(self, obj):
         return Q.resolve_name(obj, zh_field="model_name")
@@ -66,18 +86,25 @@ class ModelBrief(serializers.ModelSerializer):
         return " / ".join(p for p in parts if p)
 
 
-class CategoryNode(serializers.ModelSerializer):
+class CategoryNode(NameChainMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ["category_id", "category_code", "display_name", "category_level", "node_type"]
+        fields = [
+            "category_id",
+            "category_code",
+            "display_name",
+            "name_chain",
+            "category_level",
+            "node_type",
+        ]
 
     def get_display_name(self, obj):
         return Q.resolve_name(obj, zh_field="category_name", en_field="category_name_en")
 
 
-class SpuCard(serializers.ModelSerializer):
+class SpuCard(NameChainMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
     brand = serializers.SerializerMethodField()
 
@@ -87,6 +114,7 @@ class SpuCard(serializers.ModelSerializer):
             "spu_id",
             "spu_code",
             "display_name",
+            "name_chain",
             "oe_number",
             "brand",
             "gtin",
@@ -120,7 +148,7 @@ def _meta(request, total=None, resolved_locale: str | None = None):
 @permission_classes([])
 def brands(request):
     """I1-1 品牌列表（找件入口）。"""
-    qs = list(Q.list_brands())
+    qs = Q.attach_entity_names("brand", list(Q.list_brands()))
     data = BrandBrief(qs, many=True).data
     loc = Q.resolved_locale(qs[0], zh_field="brand_name", en_field="brand_name_en") if qs else None
     return Response({"data": data, "meta": _meta(request, len(data), loc)})
@@ -130,7 +158,8 @@ def brands(request):
 @permission_classes([])
 def series(request, brand_id: str):
     """I1-2 车系列表。"""
-    data = SeriesBrief(Q.list_series(brand_id), many=True).data
+    rows = Q.attach_entity_names("series", Q.list_series(brand_id))
+    data = SeriesBrief(rows, many=True).data
     return Response({"data": data, "meta": _meta(request, len(data))})
 
 
@@ -138,7 +167,8 @@ def series(request, brand_id: str):
 @permission_classes([])
 def models(request, series_id: str):
     """I1-3 车型列表（含配置摘要）。"""
-    data = ModelBrief(Q.list_models(series_id), many=True).data
+    rows = Q.attach_entity_names("model", Q.list_models(series_id))
+    data = ModelBrief(rows, many=True).data
     return Response({"data": data, "meta": _meta(request, len(data))})
 
 
@@ -146,7 +176,8 @@ def models(request, series_id: str):
 @permission_classes([])
 def categories_tree(request):
     """I1-5 类目树（scope 内；v1 全量后台类目树）。"""
-    data = CategoryNode(Q.list_categories_tree(), many=True).data
+    roots = Q.attach_entity_names("category", Q.list_categories_tree())
+    data = CategoryNode(roots, many=True).data
     return Response({"data": data, "meta": _meta(request, len(data))})
 
 
@@ -177,6 +208,7 @@ def fitments(request):
         verified_only=not _can_see_unverified(request),
     )
     total, rows = Q.fitment_spus(query)
+    Q.attach_entity_names("spu", [f.spu for f in rows])
     data = []
     for f in rows:
         item = SpuCard(f.spu).data
@@ -209,6 +241,8 @@ def search_oe(request):
             status=400,
         )
     direct, xref = Q.search_oe(q)
+    Q.attach_entity_names("spu", direct)
+    Q.attach_entity_names("spu", xref)
     return Response(
         {
             "data": {
@@ -230,6 +264,7 @@ def spu_detail(request, spu_id: str):
             {"error": {"code": "404", "error_code": "NOT_FOUND", "message": "Товар не найден"}},
             status=404,
         )
+    Q.attach_entity_names("spu", [spu])
     card = SpuCard(spu).data
     card["attributes"] = [
         {
@@ -259,6 +294,7 @@ def spu_detail(request, spu_id: str):
 def spu_interchanges(request, spu_id: str):
     """I1-7 交叉号展开（一个 OE → 多货号，F-04）。"""
     rows = Q.spu_interchanges(spu_id)
+    Q.attach_entity_names("spu", [r.target_spu for r in rows])
     data = [
         {
             "target_spu": SpuCard(r.target_spu).data,
@@ -275,13 +311,16 @@ def spu_interchanges(request, spu_id: str):
 @permission_classes([])
 def picker_candidates(request):
     """I2-1 选件器候选检索（管理端组商品；include_unverified 仅数据员）。"""
-    rows = Q.picker_candidates(
-        model_id=request.query_params.get("model_id") or None,
-        oe=request.query_params.get("oe") or None,
-        category_id=request.query_params.get("category_id") or None,
-        q=request.query_params.get("q") or None,
-        verified_only=not _can_see_unverified(request),
-    )[:100]
+    rows = Q.attach_entity_names(
+        "spu",
+        Q.picker_candidates(
+            model_id=request.query_params.get("model_id") or None,
+            oe=request.query_params.get("oe") or None,
+            category_id=request.query_params.get("category_id") or None,
+            q=request.query_params.get("q") or None,
+            verified_only=not _can_see_unverified(request),
+        )[:100],
+    )
     return Response({"data": SpuCard(rows, many=True).data, "meta": _meta(request, len(rows))})
 
 

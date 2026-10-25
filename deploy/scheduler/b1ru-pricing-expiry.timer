@@ -1,0 +1,11 @@
+# B1-RU F-11 定时器（D1-B：每 15 分钟；Persistent 补跑停机期间错过的批次）
+[Unit]
+Description=B1-RU F-11 pricing expiry timer
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+Unit=b1ru-pricing-expiry.service
+
+[Install]
+WantedBy=timers.target

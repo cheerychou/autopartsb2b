@@ -20,6 +20,7 @@ from django.db import transaction
 
 from catalog.models import Brand
 from catalog.models_category import Category, CategorySPU, PositionDict
+from catalog.models_entity_names import EntityName
 from catalog.models_product import SPU
 
 
@@ -144,12 +145,36 @@ def _import_category_spus(rows):
     return created, updated
 
 
+def _import_entity_names(rows):
+    """entity_names（27号§四：泛化多市场命名表；market=GLOBAL/ru，ru 为首行数据）。
+
+    幂等键 = 自然键（entity_type+entity_id+market+locale+name_type+name）——不取
+    name_id 作主（总仓换 ID 不应产生重复行）。v1 读 JSON 形态（与既有 importer 同构；
+    27号§四包结构示意 CSV——CDD3 期 1 实际出包若为 CSV，届时加适配器，预检会以
+    "缺数据文件"显式失败而非静默跳过）。
+    """
+    created = updated = 0
+    for r in rows:
+        _, was_created = EntityName.objects.update_or_create(
+            entity_type=r["entity_type"],
+            entity_id=str(r["entity_id"]),
+            market=r.get("market", "GLOBAL"),
+            locale=r.get("locale", "ru-RU"),
+            name_type=r.get("name_type", "official"),
+            name=r["name"],
+            defaults=_pick(r, "source", "status"),
+        )
+        created, updated = created + was_created, updated + (not was_created)
+    return created, updated
+
+
 IMPORTERS = {
     "brands": _import_brands,
     "position_dicts": _import_position_dicts,
     "categories": _import_categories,
     "spus": _import_spus,
     "category_spus": _import_category_spus,
+    "entity_names": _import_entity_names,
 }
 
 

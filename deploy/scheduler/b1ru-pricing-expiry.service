@@ -1,0 +1,14 @@
+# B1-RU F-11 限时价到期批量下价（D1-B 裁定 2026-10-26；oneshot，由同名 .timer 周期触发）
+# 安装：见本目录 README.md；路径按交付实际调整（默认 /opt/b1ru）
+[Unit]
+Description=B1-RU F-11 deactivate expired prices (oneshot)
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/b1ru/backend
+# 生产档关键环境变量（DJANGO_ENV=production 时缺项拒绝启动——fail-safe，config/settings.py）
+EnvironmentFile=-/opt/b1ru/deploy/b1ru.env
+ExecStart=/opt/b1ru/backend/venv/bin/python manage.py deactivate_expired_prices --quiet
+User=www-data
+Group=www-data

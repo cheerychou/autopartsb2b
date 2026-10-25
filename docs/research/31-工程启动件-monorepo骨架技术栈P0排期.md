@@ -112,6 +112,19 @@ autopartsb2b/
 
 1. `git` 新建 `engineering/kickoff` 分支；2. 落 S0：仓库骨架 + H1–H6；3. copy-ledger 首批登记（R-B1/B2 可立即执行——不依赖 #1079）；4. R-A1 挂起待 #1079，期间以 mock 驱动 S2；5. 每 Sprint 出口跑 26号 DoD 对应条目并在 KNW/变更记录留痕。
 
+## 八、决策记录（2026-10-26，D1–D6 待决策清单拍板结果）
+
+| # | 决策点 | 裁定 | 落地件 |
+|---|---|---|---|
+| D1 | 限时价到期下价自动化 | **B**：systemd timer/cron 每 15 分钟调 `manage.py deactivate_expired_prices`（D1-A 手动位+读路径防御为天然降级兜底）；不引入 Celery 常驻服务 | `commerce/management/commands/deactivate_expired_prices.py` + `deploy/scheduler/`（DoD 5 由此可真实验证） |
+| D2 | entity_names 未就位期命名策略 | **B+C**：实例侧先建 entity_names 表（27号§四契约结构）+ I3 importer + I1 回退链接入（响应附 name_chain）；M1 演示用人工俄语词表（`load_ru_demo_names`，可 `--purge` 置 retired），正式语料随包覆盖（28号§九②） | `catalog/models_entity_names.py`、`catalog/services/query.py` 回退链收敛、I1 九端点 + storefront 代理附挂 |
+| D3 | 订阅 license 机制 | **A**：离线 Ed25519 验签文件，信息性校验（启动日志+24h 缓存），不锁功能（26号"不远程锁死"）；无文件=missing 只提示 | `shared/licensing.py` + `make_license`/`license_status` 命令；公钥入库，私钥在开发商侧（不入库/不入镜像） |
+| D4 | 支付网关 | 维持对公先行+接口预留（26号❓首单定）；询价为商务侧动作 | —— |
+| D5 | M1 演示数据包 | A 为主（CDD3 现库导出，与 #1079 基准回填同一接触面）、自建演示包兜底；由商务侧向 CDD3 发起 | —— |
+| D6 | F-24 目录管理界面排期 | **A**：排 M1 后，内测期以暂存 API + Django admin 兜底（M1 演示脚本注明） | —— |
+
+> 待办承接：I1 端点 response schema 缺位（spectacular 对裸 `@api_view` 一律 ignoring view——契约面补全属后续迭代）；requirements 中 celery/redis 为 CDD3 主线对齐声明、v1 未接线（D1-B 走 cron，无常驻服务）。
+
 ---
 
 *关联：上游 [30号](30-CDD3工程资产盘点与复用清单.md)（复用清单=本文依据）、[26号](26-B1-RU-v1产品范围说明书.md)（范围与 DoD）、[29号](29-实例内接口契约-I1目录查询与I2选件器.md)（S1 验收基线）、[27号](27-数据包契约草案-总仓到实例目录数据管线.md)（F-21 规格）。本文经委托方确认后即开工 S0。*

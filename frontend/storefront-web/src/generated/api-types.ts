@@ -4,6 +4,78 @@
  */
 
 export interface paths {
+    "/api/v1/batches/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 创建进口批次（贴标工作台第一步；F-16）。 */
+        post: operations["api_v1_batches_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_no}/codes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description F-16 贴标工作台：批次码清单导入（ЧЗ 导出/Excel 粘贴的码值列表）。
+         *
+         *     支持从中国远程调用（25号§一.5：贴标在中国侧、核销在俄境）。
+         */
+        post: operations["api_v1_batches_codes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_no}/print-list/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-16 打印清单导出：批次内已贴码清单（DataMatrix 内容+GTIN，供标签打印）。 */
+        get: operations["api_v1_batches_print_list_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_no}/receive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 收货验码（labelled→in_stock，同步库存入账）；可选按码精确验收。 */
+        post: operations["api_v1_batches_receive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/buyer-accounts/": {
         parameters: {
             query?: never;
@@ -66,6 +138,57 @@ export interface paths {
         put?: never;
         /** @description F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。 */
         post: operations["api_v1_buyer_accounts_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/codes/aging/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 码报表：在库码数 + 批次账龄分桶（25号§2.6）。 */
+        get: operations["api_v1_codes_aging_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/codes/outbound/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 按码出库（in_stock→outbound，销售核销；库存同步扣减）。 */
+        post: operations["api_v1_codes_outbound_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/codes/return/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 退货回转（outbound→returned→in_stock 重新入转；库存同步回补）。 */
+        post: operations["api_v1_codes_return_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -216,6 +339,92 @@ export interface paths {
         patch: operations["api_v1_products_partial_update"];
         trace?: never;
     };
+    "/api/v1/products/{product_id}/relist/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description F-11 重挂（限时价到期后的唯一恢复路径）：重新定价 + 重启窗口 + 上架。
+         *
+         *     走查 P1-1（2026-10-25）：此前 relist_with_new_price 无生产调用方、
+         *     价格窗口字段序列化器只读 → 到期商品永久不可售。本端点补全闭环。
+         */
+        post: operations["api_v1_products_relist_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/catalog-coverage/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_reports_catalog_coverage_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/codes-aging/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_reports_codes_aging_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/sales/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_reports_sales_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/slow-movers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_reports_slow_movers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/catalog/v1/brands": {
         parameters: {
             query?: never;
@@ -363,6 +572,41 @@ export interface paths {
         get: operations["catalog_v1_spus_interchanges_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/v1/staging/export-feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description I4 后半：FEED 变更集导出（tar.gz，人工上传总仓；data_steward/owner）。 */
+        post: operations["catalog_v1_staging_export_feed_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/v1/staging/fitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。 */
+        get: operations["catalog_v1_staging_fitments_retrieve"];
+        put?: never;
+        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。 */
+        post: operations["catalog_v1_staging_fitments_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -558,6 +802,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BatchInRequest: {
+            batch_no: string;
+            /** @default  */
+            customs_declaration: string;
+        };
         BuyerAccount: {
             readonly id: number;
             readonly username: string;
@@ -601,6 +850,13 @@ export interface components {
             shipping_address: string;
             payment_method: components["schemas"]["PaymentMethodEnum"];
         };
+        CodeListInRequest: {
+            /** Format: uuid */
+            product_id: string;
+            /** @default  */
+            gtin: string;
+            code_values: string[];
+        };
         ConfirmPaymentRequest: {
             /** Format: decimal */
             amount: string;
@@ -623,6 +879,13 @@ export interface components {
         LoginRequest: {
             username: string;
             password: string;
+        };
+        OutboundRequest: {
+            /** Format: uuid */
+            product_id: string;
+            code_values: string[];
+            /** Format: uuid */
+            order_id?: string;
         };
         PaginatedBuyerAccountList: {
             /** @example 123 */
@@ -828,6 +1091,9 @@ export interface components {
             /** @default 30 */
             price_days: number;
         };
+        ReceiveRequest: {
+            code_values?: string[];
+        };
         RegisterRequest: {
             username: string;
             password: string;
@@ -838,6 +1104,16 @@ export interface components {
             company_name_ru: string;
             /** @default  */
             inn: string;
+        };
+        /** @description F-11 重挂入参：新价格 + 新窗口天数（窗口重启，调价历史留在 OrderItem 快照）。 */
+        RelistRequest: {
+            /** Format: decimal */
+            price_amount: string;
+            /** @default 30 */
+            price_days: number;
+        };
+        ReturnRequest: {
+            code_values: string[];
         };
         ShipRequest: {
             tracking_no: string;
@@ -873,6 +1149,102 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    api_v1_batches_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchInRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchInRequest"];
+                "multipart/form-data": components["schemas"]["BatchInRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_batches_codes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeListInRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CodeListInRequest"];
+                "multipart/form-data": components["schemas"]["CodeListInRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_batches_print_list_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_batches_receive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReceiveRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReceiveRequest"];
+                "multipart/form-data": components["schemas"]["ReceiveRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_buyer_accounts_list: {
         parameters: {
             query?: {
@@ -983,6 +1355,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["BuyerAccount"];
                 };
+            };
+        };
+    };
+    api_v1_codes_aging_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_codes_outbound_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutboundRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OutboundRequest"];
+                "multipart/form-data": components["schemas"]["OutboundRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_codes_return_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReturnRequest"];
+                "multipart/form-data": components["schemas"]["ReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1274,6 +1712,106 @@ export interface operations {
             };
         };
     };
+    api_v1_products_relist_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 product 的 UUID 字符串。 */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelistRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RelistRequest"];
+                "multipart/form-data": components["schemas"]["RelistRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    api_v1_reports_catalog_coverage_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_reports_codes_aging_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_reports_sales_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_reports_slow_movers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     catalog_v1_brands_retrieve: {
         parameters: {
             query?: never;
@@ -1431,6 +1969,60 @@ export interface operations {
             path: {
                 spu_id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    catalog_v1_staging_export_feed_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    catalog_v1_staging_fitments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    catalog_v1_staging_fitments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

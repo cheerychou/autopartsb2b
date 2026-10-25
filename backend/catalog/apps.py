@@ -19,6 +19,7 @@ class CatalogConfig(AppConfig):
     def ready(self):
         import catalog.models  # noqa: F401
         import catalog.models_category  # noqa: F401
+        import catalog.models_entity_names  # noqa: F401  (27号§四 契约表，本仓新建)
         import catalog.models_epc  # noqa: F401
         import catalog.models_fitment  # noqa: F401
         import catalog.models_pack_log  # noqa: F401  (本仓扩展表，非拷贝)

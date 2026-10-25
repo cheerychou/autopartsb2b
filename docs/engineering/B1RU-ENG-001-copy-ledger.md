@@ -33,6 +33,7 @@ updated_at: 2026-10-25
 | R-A1 | 2026-10-25 | —— | `backend/catalog/migrations/0001_init_catalog_domain.py` | —— | 本仓首次生成（非拷贝）；表名沿用 CDD3 前缀 | AI（S1） |
 | R-A1+ | 2026-10-25 | 接入适配补充（同 R-A1 基准）：①import_seed_package.py 增 **--strict / 默认 skip-unknown+告警**（G6 前向兼容，28a Q6 对称实现）；②命令尾部快照登记 **SeedPackageExecution→CatalogPackLog**（F-21/I3 版本登记之源，catalog_version）；③`ready()` 显式注册 models_* 子集（承 CDD3 DataPlatformConfig.ready 机制） | `backend/catalog/` | f9d40417 | 均"接入适配"非模型修改 | AI（S1） |
 | 新增 | 2026-10-25 | ——（本仓新建，非拷贝） | `catalog/models_pack_log.py` + `migrations/0002_add_pack_log.py`；`catalog/services/query.py`（I1 服务层：名称回退链/verified 门控/OE 多形态/双向交叉号）；`catalog/views.py`+`urls.py`（I1 九端点+I2 选件器，匿名放行） | —— | 29号契约的 S1 实现 | AI（S1） |
+| 新增 | 2026-10-26 | ——（本仓新建，非拷贝） | `catalog/models_entity_names.py`+`migrations/0004`；I3 importer `entity_names`；`shared/licensing.py`+`make_license`/`license_status`；`commerce` 下价命令；`deploy/scheduler/`；I1/storefront name_chain 附挂 | —— | D1-B/D2-B+C/D3-A 决策落地（31号§八）：EntityName 为 27号§四契约表非拷贝；目录数据/交易域模型零改动 | AI（D 决策轮） |
 | 剥离记录 | 2026-10-25 | export_standalone_seed.py **不拷贝**（总仓侧出包工具，B1-RU 只消费包） | —— | —— | 出包能力在 CDD3（ADT-DP-007 承接） | AI（S1） |
 | R-A2 | RBAC 机制 + 认证中心 + shared 中间件（单租户裁剪） | `store_services/middleware/`、`shared/` | 无 | 待执行 |
 | R-A3 | Makefile/pytest/mypy/coverage 基线/lock 机制 | `backend/` | 无 | 部分已承模式（Makefile/pre-commit 本仓重写，见下"模式承袭"） |

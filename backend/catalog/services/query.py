@@ -16,6 +16,7 @@ from django.db import models
 
 from catalog.models import Brand, VehicleModel, VehicleSeries
 from catalog.models_category import Category
+from catalog.models_entity_names import EntityName
 from catalog.models_fitment import SPUFitment
 from catalog.models_product import SPU, SPUInterchange
 
@@ -28,11 +29,15 @@ def catalog_version() -> str:
 
 
 def resolve_name(obj, *, zh_field: str, en_field: str | None = None) -> str:
-    """名称回退链 ru→en→zh：entity_names（ru 行）→ _en 字段 → 中文名。
+    """名称回退链 ru→en→zh（28a 定稿固定序）：entity_names（ru/GLOBAL，official→alias）
+    → *_en 字段 → 中文名。
 
-    entity_names 表（CDD3 期 1，G-03/R2.1）就位后在此接入；当前实现
-    即"en→zh"两段，接口形状不变。
+    entity_names 行经 attach_entity_names 预挂（_entity_name_rows）；未挂载/无行
+    =语料未灌，退化为 en→zh 两段（接口形状不变，27号定稿要点）。
     """
+    for row in getattr(obj, "_entity_name_rows", None) or []:
+        if row.name:
+            return row.name
     if en_field:
         en = getattr(obj, en_field, None)
         if en:
@@ -42,10 +47,59 @@ def resolve_name(obj, *, zh_field: str, en_field: str | None = None) -> str:
 
 def resolved_locale(obj, *, zh_field: str, en_field: str | None = None) -> str:
     """如实返回 display_name 实际命中的回退链语言（评审：meta 不得宣称未发生的解析）。
-    entity_names ru 行接入后此函数是唯一判定点。"""
+
+    命中 entity_names 行时取该行 locale 语言段（GLOBAL 行可能是 en——不冒称 ru）。
+    """
+    for row in getattr(obj, "_entity_name_rows", None) or []:
+        if row.name:
+            return (row.locale or "ru")[:2]
     if en_field and getattr(obj, en_field, None):
         return "en"
     return "zh"
+
+
+def name_chain(obj) -> list[dict]:
+    """29号§二：I1 响应附 name_chain（前台标注"官方名/俄市俗称"的原料）；无行 → []。"""
+    return [
+        {
+            "market": r.market,
+            "locale": r.locale,
+            "name_type": r.name_type,
+            "name": r.name,
+            "source": r.source,
+        }
+        for r in getattr(obj, "_entity_name_rows", None) or []
+    ]
+
+
+def attach_entity_names(entity_type: str, objs) -> list:
+    """批量预挂 entity_names 行（_entity_name_rows；每页 1 查询防 N+1）。
+
+    仅取 ru + GLOBAL 生效行（回退链 ru 段原料）；entity_id 为泛化 CharField——
+    拷贝域模型禁加关系（铁律 2），故以 PK 字符串批量反查而非 ORM relation。
+    """
+    objs = list(objs)
+    if not objs:
+        return objs
+    ids = {str(o.pk) for o in objs}
+    rows = EntityName.objects.filter(
+        status="active", entity_type=entity_type, entity_id__in=ids, market__in=["ru", "GLOBAL"]
+    )
+    by_id: dict[str, list] = {}
+    for r in rows:
+        by_id.setdefault(r.entity_id, []).append(r)
+    for o in objs:
+        o._entity_name_rows = sorted(by_id.get(str(o.pk), []), key=_name_row_priority)
+    return objs
+
+
+def _name_row_priority(row):
+    """回退链内解析优先序：ru official → GLOBAL official → ru alias → GLOBAL alias。"""
+    return (
+        0 if row.market == "ru" else 1,
+        0 if row.name_type == "official" else 1,
+        row.created_at,
+    )
 
 
 @dataclasses.dataclass

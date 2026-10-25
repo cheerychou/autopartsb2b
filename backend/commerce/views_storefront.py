@@ -168,6 +168,7 @@ def store_product(request, spu_id: uuid.UUID):
         return err(404, "NOT_FOUND", "Товар не найден")
     from catalog.views import SpuCard
 
+    catalog_query.attach_entity_names("spu", [spu])  # 回退链原料 + name_chain 附挂
     data = SpuCard(spu).data
     data["attributes"] = [
         {
@@ -212,6 +213,8 @@ def store_search_oe(request):
     if len(catalog_query.normalize_oe(q)) < 4:
         return err(400, "ARTICLE_TOO_SHORT", "Артикул слишком короткий")
     direct, xref = catalog_query.search_oe(q)
+    catalog_query.attach_entity_names("spu", direct)
+    catalog_query.attach_entity_names("spu", xref)
     return Response(
         {
             "data": {
