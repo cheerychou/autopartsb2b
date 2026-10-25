@@ -48,6 +48,23 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=16, choices=PaymentMethod.choices)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="订单总额(₽)")
     shipping_address = models.TextField(verbose_name="收货地址")
+    # F-14 核销留痕（高危域：谁在何时确认了到账）
+    payment_confirmed_by = models.ForeignKey(
+        "auth.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="payment_confirmations",
+        verbose_name="核销人",
+    )
+    payment_confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name="核销时间")
+    payment_note = models.CharField(max_length=200, blank=True, default="", verbose_name="对账备注")
+    # F-13 履约
+    tracking_no = models.CharField(max_length=64, blank=True, default="", verbose_name="物流单号")
+    carrier = models.CharField(max_length=32, blank=True, default="", verbose_name="承运商")
+    cancellation_note = models.CharField(
+        max_length=200, blank=True, default="", verbose_name="取消原因"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

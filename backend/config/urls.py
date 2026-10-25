@@ -22,6 +22,8 @@ urlpatterns = [
     path("catalog/v1/", include("catalog.urls")),
     # 交易域接口（commerce，RBAC 默认权限链）
     path("api/v1/", include("commerce.urls")),
+    # S4 管理端：限时价下架/对账核销/发货（RBAC 默认链，高危域人工必审 REVIEW.md）
+    path("api/v1/", include(commerce_urls.admin_patterns)),
     # 买家侧 storefront API（S3；游客匿名+三形态门控在视图层）
     path("storefront/v1/", include(commerce_urls.storefront_patterns)),
 ]

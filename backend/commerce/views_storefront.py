@@ -371,3 +371,59 @@ def my_orders(request):
             "meta": _buyer_meta(request, buyer),
         }
     )
+
+
+@api_view(["GET"])
+def my_order_detail(request, order_id: uuid.UUID):
+    """F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。"""
+    buyer, err = _require_buyer(request)
+    if err:
+        return err
+    order = (
+        Order.objects.prefetch_related("items")
+        .filter(order_id=order_id, account=buyer.account)
+        .first()
+    )
+    if order is None:
+        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+    return Response(
+        {
+            "data": {
+                "order_no": order.order_no,
+                "status": order.status,
+                "total_amount": str(order.total_amount),
+                "payment_method": order.payment_method,
+                "tracking_no": order.tracking_no,
+                "carrier": order.carrier,
+                "shipping_address": order.shipping_address,
+                "items": [
+                    {
+                        "title_ru": i.title_ru,
+                        "quantity": i.quantity,
+                        "unit_price": str(i.unit_price),
+                        "line_amount": str(i.line_amount),
+                    }
+                    for i in order.items.all()
+                ],
+            },
+            "meta": _buyer_meta(request, buyer),
+        }
+    )
+
+
+@api_view(["POST"])
+def confirm_receipt(request, order_id: uuid.UUID):
+    """F-07 签收：shipped→completed（买家确认收货）。"""
+    buyer, err = _require_buyer(request)
+    if err:
+        return err
+    order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
+    if order is None:
+        return Response({"error": {"code": "404", "message": "Заказ не найден"}}, status=404)
+    try:
+        from commerce import services_fulfillment
+
+        services_fulfillment.complete_order(order)
+    except services_fulfillment.OrderStateError as e:
+        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+    return Response({"data": {"order_no": order.order_no, "status": order.status}})

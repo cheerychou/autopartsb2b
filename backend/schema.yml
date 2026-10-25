@@ -216,6 +216,80 @@ paths:
               schema:
                 $ref: '#/components/schemas/InventoryItem'
           description: ''
+  /api/v1/orders/{order_id}/confirm-payment:
+    post:
+      operationId: api_v1_orders_confirm_payment_create
+      description: |-
+        F-14 对公到账人工确认核销（awaiting_confirmation→paid）。
+
+        高危域：金额必须与订单总额一致；重复核销报错；confirmed_by 留痕。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orders/{order_id}/ship:
+    post:
+      operationId: api_v1_orders_ship_create
+      description: F-13 发货（paid→shipped）+ 物流单号录入。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShipRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/pricing/deactivate-expired:
+    post:
+      operationId: api_v1_pricing_deactivate_expired_create
+      description: F-11 手动触发批量下价（定时任务 deploy/ 接线前的手动位）。
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/products/:
     get:
       operationId: api_v1_products_list
@@ -581,6 +655,42 @@ paths:
       responses:
         '200':
           description: No response body
+  /storefront/v1/orders/{order_id}:
+    get:
+      operationId: storefront_v1_orders_retrieve_2
+      description: F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /storefront/v1/orders/{order_id}/confirm-receipt:
+    post:
+      operationId: storefront_v1_orders_confirm_receipt_create
+      description: F-07 签收：shipped→completed（买家确认收货）。
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - storefront
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /storefront/v1/store/products/{spu_id}:
     get:
       operationId: storefront_v1_store_products_retrieve
@@ -693,6 +803,20 @@ components:
       required:
       - payment_method
       - shipping_address
+    ConfirmPaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        note:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 200
+      required:
+      - amount
     DecisionRequest:
       type: object
       properties:
@@ -1087,6 +1211,20 @@ components:
       - buyer_type
       - password
       - username
+    ShipRequest:
+      type: object
+      properties:
+        tracking_no:
+          type: string
+          minLength: 1
+          maxLength: 64
+        carrier:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 32
+      required:
+      - tracking_no
     TxInRequest:
       type: object
       properties:

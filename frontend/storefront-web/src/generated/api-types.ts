@@ -123,6 +123,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{order_id}/confirm-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description F-14 对公到账人工确认核销（awaiting_confirmation→paid）。
+         *
+         *     高危域：金额必须与订单总额一致；重复核销报错；confirmed_by 留痕。
+         */
+        post: operations["api_v1_orders_confirm_payment_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/ship": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-13 发货（paid→shipped）+ 物流单号录入。 */
+        post: operations["api_v1_orders_ship_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing/deactivate-expired": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-11 手动触发批量下价（定时任务 deploy/ 接线前的手动位）。 */
+        post: operations["api_v1_pricing_deactivate_expired_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products/": {
         parameters: {
             query?: never;
@@ -414,6 +469,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/storefront/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-07 订单详情：仅本人可见（account 隔离），含行项与物流单号。 */
+        get: operations["storefront_v1_orders_retrieve_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storefront/v1/orders/{order_id}/confirm-receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-07 签收：shipped→completed（买家确认收货）。 */
+        post: operations["storefront_v1_orders_confirm_receipt_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/storefront/v1/store/products/{spu_id}": {
         parameters: {
             query?: never;
@@ -494,6 +583,12 @@ export interface components {
         CheckoutRequest: {
             shipping_address: string;
             payment_method: components["schemas"]["PaymentMethodEnum"];
+        };
+        ConfirmPaymentRequest: {
+            /** Format: decimal */
+            amount: string;
+            /** @default  */
+            note: string;
         };
         DecisionRequest: {
             /** @default  */
@@ -727,6 +822,11 @@ export interface components {
             /** @default  */
             inn: string;
         };
+        ShipRequest: {
+            tracking_no: string;
+            /** @default  */
+            carrier: string;
+        };
         TxInRequest: {
             tx_type: components["schemas"]["TxTypeEnum"];
             quantity: number;
@@ -938,6 +1038,76 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InventoryItem"];
                 };
+            };
+        };
+    };
+    api_v1_orders_confirm_payment_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPaymentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmPaymentRequest"];
+                "multipart/form-data": components["schemas"]["ConfirmPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_orders_ship_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ShipRequest"];
+                "multipart/form-data": components["schemas"]["ShipRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_pricing_deactivate_expired_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1370,6 +1540,46 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_orders_retrieve_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    storefront_v1_orders_confirm_receipt_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

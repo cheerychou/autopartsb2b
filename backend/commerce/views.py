@@ -4,14 +4,16 @@ RBAC：全局默认 RoleBasedPermission；各 ViewSet 声明 ACTION_PERMISSIONS
 （read/write/manage 三档，backend/CLAUDE.md）。买家端独立认证（S3），本文件均为管理端。
 """
 
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from catalog.services.query import catalog_version
-from commerce import services
+from commerce import services, services_fulfillment
 from commerce.models_customer import BuyerAccount
+from commerce.models_order import Order
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
 from shared.permissions import RoleBasedPermission
 
@@ -202,3 +204,75 @@ class BuyerAccountViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": {"code": "400", "message": "驳回须附意见"}}, status=400)
         services.reject_corporate(account, by=request.user, note=s.validated_data["note"])
         return Response(BuyerAccountSerializer(account).data)
+
+
+# ---------- S4：F-11 限时价 / F-13 发货 / F-14 对账核销（高危域，REVIEW.md P4） ----------
+
+
+@api_view(["POST"])
+def deactivate_expired_prices(request):
+    """F-11 手动触发批量下价（定时任务 deploy/ 接线前的手动位）。"""
+    from commerce.services_pricing import deactivate_expired_prices as run
+
+    codes = run()
+    return Response({"data": {"deactivated": codes, "count": len(codes)}})
+
+
+class ConfirmPaymentSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    note = serializers.CharField(default="", max_length=200)
+
+
+@extend_schema(request=ConfirmPaymentSerializer)
+@api_view(["POST"])
+def confirm_payment(request, order_id):
+    """F-14 对公到账人工确认核销（awaiting_confirmation→paid）。
+
+    高危域：金额必须与订单总额一致；重复核销报错；confirmed_by 留痕。
+    """
+    order = get_object_or_404(Order, order_id=order_id)
+    s = ConfirmPaymentSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    try:
+        services_fulfillment.confirm_payment(
+            order,
+            confirmed_by=request.user,
+            amount=s.validated_data["amount"],
+            note=s.validated_data["note"],
+        )
+    except services_fulfillment.OrderStateError as e:
+        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+    except ValueError as e:
+        return Response({"error": {"code": "400", "message": str(e)}}, status=400)
+    return Response({"data": {"order_no": order.order_no, "status": order.status}})
+
+
+class ShipSerializer(serializers.Serializer):
+    tracking_no = serializers.CharField(max_length=64)
+    carrier = serializers.CharField(default="", max_length=32)
+
+
+@extend_schema(request=ShipSerializer)
+@api_view(["POST"])
+def ship_order(request, order_id):
+    """F-13 发货（paid→shipped）+ 物流单号录入。"""
+    order = get_object_or_404(Order, order_id=order_id)
+    s = ShipSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    try:
+        services_fulfillment.ship_order(
+            order,
+            tracking_no=s.validated_data["tracking_no"],
+            carrier=s.validated_data["carrier"],
+        )
+    except (services_fulfillment.OrderStateError, ValueError) as e:
+        return Response({"error": {"code": "409", "message": str(e)}}, status=409)
+    return Response(
+        {
+            "data": {
+                "order_no": order.order_no,
+                "status": order.status,
+                "tracking_no": order.tracking_no,
+            }
+        }
+    )
