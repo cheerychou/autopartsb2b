@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "dependencies": [
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/progress.tsx",
+      "content": "import * as React from 'react';\n\nexport interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {\n  value?: number;\n}\n\n/**\n * Progress component.\n * Renders a simple progress bar using Tailwind classes.\n */\nexport function Progress({ value = 0, className, ...props }: ProgressProps) {\n  const pct = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));\n  return (\n    <div\n      className={['w-full bg-muted rounded', className].filter(Boolean).join(' ')}\n      role=\"progressbar\"\n      aria-valuenow={pct}\n      aria-valuemin={0}\n      aria-valuemax={100}\n      {...props}\n    >\n      <div className=\"h-2 rounded bg-primary\" style={{ width: `${pct}%` }} />\n    </div>\n  );\n}\n\nexport default Progress;\n",
+      "type": "registry:ui",
+      "target": "components/ui/progress.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

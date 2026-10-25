@@ -1,0 +1,106 @@
+{
+  "name": "@cdd/b1-shared-ui",
+  "version": "0.3.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./logger": {
+      "types": "./src/logger.ts",
+      "import": "./src/logger.ts"
+    },
+    "./types": {
+      "types": "./src/types/domain.ts",
+      "import": "./src/types/domain.ts"
+    },
+    "./styles": {
+      "types": "./src/styles/global.css",
+      "import": "./src/styles/global.css"
+    },
+    "./tokens": {
+      "import": "./tokens/build/css/tokens-saas.css"
+    },
+    "./tokens/fonts": {
+      "import": "./tokens/fonts.css"
+    },
+    "./tokens/typography": {
+      "import": "./tokens/build/css/tokens-typography.css"
+    },
+    "./tokens/shadow": {
+      "import": "./tokens/build/css/tokens-shadow.css"
+    },
+    "./tokens/motion": {
+      "import": "./tokens/build/css/tokens-motion.css"
+    },
+    "./tokens/brand": {
+      "import": "./tokens/brand-layer.css"
+    },
+    "./tokens/dark": {
+      "import": "./tokens/dark-layer.css"
+    },
+    "./tokens/ts": {
+      "types": "./tokens/build/ts/tokens.ts",
+      "import": "./tokens/build/ts/tokens.ts"
+    },
+    "./hooks": {
+      "types": "./src/hooks/index.ts",
+      "import": "./src/hooks/index.ts"
+    }
+  },
+  "scripts": {
+    "lint:css": "stylelint \"src/**/*.css\" --config ../../stylelint.config.mjs",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "build:tokens": "node tokens/build.mjs",
+    "storybook": "storybook dev",
+    "build-storybook": "storybook build",
+    "chromatic": "chromatic --exit-zero-on-changes"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.14.13",
+    "axios": "^1.20.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
+    "date-fns": "^4.4.0",
+    "motion": "^12.42.2",
+    "react-day-picker": "^9.14.0",
+    "react-hook-form": "^7.89.0",
+    "recharts": "^3.10.0",
+    "sonner": "^2.0.7",
+    "zod": "^3.25.76",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@emotion/is-prop-valid": "^1.4.0",
+    "@eslint/js": "^9.39.4",
+    "@storybook/addon-essentials": "^8",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.39.4",
+    "jsdom": "^24.1.0",
+    "storybook": "^8.6.18",
+    "style-dictionary": "^5.5.5",
+    "typescript": "~5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "peerDependencies": {
+    "@dnd-kit/core": "^6.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

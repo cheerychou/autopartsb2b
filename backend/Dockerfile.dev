@@ -1,0 +1,6 @@
+FROM python:3.13-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+RUN pip install --no-cache-dir django==5.0.* djangorestframework django-filter drf-spectacular psycopg[binary]
+COPY . .
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

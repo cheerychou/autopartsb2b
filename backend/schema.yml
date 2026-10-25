@@ -1,0 +1,6 @@
+openapi: 3.0.3
+info:
+  title: B1-RU API
+  version: v1
+paths: {}
+components: {}

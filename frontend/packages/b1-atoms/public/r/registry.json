@@ -1,0 +1,374 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "@cdd/atoms",
+  "homepage": "https://github.com/cheerychou/CDD3",
+  "items": [
+    {
+      "name": "accordion",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/accordion.tsx",
+          "target": "components/ui/accordion.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "alert-dialog",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/alert-dialog.tsx",
+          "target": "components/ui/alert-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "avatar",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/avatar.tsx",
+          "target": "components/ui/avatar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "badge",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/badge.tsx",
+          "target": "components/ui/badge.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "src/variants/BadgeVariants.ts",
+          "target": "components/ui/variants/BadgeVariants.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "dependencies": [
+        "class-variance-authority",
+        "cn"
+      ]
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/button.tsx",
+          "target": "components/ui/button.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "src/variants/ButtonVariants.ts",
+          "target": "components/ui/variants/ButtonVariants.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "dependencies": [
+        "class-variance-authority",
+        "cn"
+      ]
+    },
+    {
+      "name": "card",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/card.tsx",
+          "target": "components/ui/card.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/checkbox.tsx",
+          "target": "components/ui/checkbox.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "collapsible",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/collapsible.tsx",
+          "target": "components/ui/collapsible.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/dialog.tsx",
+          "target": "components/ui/dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "@phosphor-icons/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/popover.tsx",
+          "target": "components/ui/popover.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/scroll-area.tsx",
+          "target": "components/ui/scroll-area.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "slider",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/slider.tsx",
+          "target": "components/ui/slider.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "dropdown-menu",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/dropdown-menu.tsx",
+          "target": "components/ui/dropdown-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "@phosphor-icons/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/input.tsx",
+          "target": "components/ui/input.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "label",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/label.tsx",
+          "target": "components/ui/label.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "progress",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/progress.tsx",
+          "target": "components/ui/progress.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "separator",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/separator.tsx",
+          "target": "components/ui/separator.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "sheet",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/sheet.tsx",
+          "target": "components/ui/sheet.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/skeleton.tsx",
+          "target": "components/ui/skeleton.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "spinner",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/spinner.tsx",
+          "target": "components/ui/spinner.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@phosphor-icons/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/switch.tsx",
+          "target": "components/ui/switch.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    },
+    {
+      "name": "table",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/table.tsx",
+          "target": "components/ui/table.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "cn"
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/tabs.tsx",
+          "target": "components/ui/tabs.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "class-variance-authority",
+        "motion",
+        "cn"
+      ]
+    },
+    {
+      "name": "tooltip",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "src/tooltip.tsx",
+          "target": "components/ui/tooltip.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ]
+    }
+  ]
+}

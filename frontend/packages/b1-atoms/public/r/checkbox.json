@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "checkbox",
+  "dependencies": [
+    "@base-ui/react",
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/checkbox.tsx",
+      "content": "import { Check } from \"@phosphor-icons/react\"\nimport { Checkbox as CheckboxPrimitive } from \"@base-ui/react/checkbox\"\n\nimport { cn } from \"cn\"\n\n// Base UI checkbox 勾选时输出 data-checked，未勾选无 data-unchecked\n// （与 radix 的 data-[state=unchecked] 不同），未选中样式走 not-data-checked 变体。\nfunction Checkbox({\n  className,\n  ...props\n}: CheckboxPrimitive.Root.Props) {\n  return (\n    <CheckboxPrimitive.Root\n      data-slot=\"checkbox\"\n      className={cn(\n        \"peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-checked:bg-primary not-data-checked:bg-transparent\",\n        className\n      )}\n      {...props}\n    >\n      <CheckboxPrimitive.Indicator\n        data-slot=\"checkbox-indicator\"\n        className=\"grid place-content-center text-current transition-none\"\n      >\n        <Check className=\"size-3.5\" />\n      </CheckboxPrimitive.Indicator>\n    </CheckboxPrimitive.Root>\n  )\n}\n\nexport { Checkbox }\n",
+      "type": "registry:ui",
+      "target": "components/ui/checkbox.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

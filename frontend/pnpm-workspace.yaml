@@ -1,0 +1,4 @@
+packages:
+  - "storefront-web"
+  - "admin-web"
+  - "packages/*"

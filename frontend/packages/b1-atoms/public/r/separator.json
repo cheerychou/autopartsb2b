@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "separator",
+  "dependencies": [
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/separator.tsx",
+      "content": "import * as React from 'react';\n\nimport { cn } from \"cn\";\n\nconst Separator = React.forwardRef<React.ElementRef<'div'>, React.ComponentPropsWithoutRef<'div'>>(\n  ({ className, ...props }, ref) => (\n    <div ref={ref} className={cn('shrink-0 bg-border', className)} {...props} />\n  )\n);\nSeparator.displayName = 'Separator';\n\nexport { Separator };\n",
+      "type": "registry:ui",
+      "target": "components/ui/separator.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

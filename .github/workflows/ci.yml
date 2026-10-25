@@ -1,0 +1,81 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  banned-patterns:
+    name: 禁止模式检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 扫描禁止模式
+        run: bash scripts/ci/check-banned-patterns.sh
+
+  backend:
+    name: 后端（lint + test + coverage）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: 安装依赖
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Lint（black/isort/flake8）
+        run: |
+          black --check --line-length=100 .
+          isort --check-only --profile=black --line-length=100 .
+          flake8 --max-line-length=100 --extend-ignore=E203,W503 .
+      - name: 类型检查（mypy core）
+        run: mypy catalog commerce shared config
+      - name: 测试（含 coverage 基线）
+        run: pytest --cov=catalog --cov=commerce --cov=shared --cov-report=term
+      # coverage-baseline 校验随 S1 接入（首批代码落库后定基线）
+
+  frontend:
+    name: 前端（lint + type-check + test）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: Lint + 类型检查 + 测试（两应用）
+        run: |
+          pnpm -r lint
+          pnpm -r type-check
+          pnpm -r test:run
+
+  docs:
+    name: 文档规范
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: frontmatter 检查（全量）
+        run: |
+          fail=0
+          for f in docs/engineering/*.md docs/knowledge/*.md; do
+            [ -f "$f" ] || continue
+            for field in doc_id title updated_at; do
+              head -10 "$f" | grep -qE "^${field}:" || { echo "🚫 $f 缺 $field"; fail=1; }
+            done
+          done
+          exit $fail

@@ -1,0 +1,9 @@
+{
+  "name": "@cdd/b1-atoms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "B1-RU 原子组件唯一源（shadcn registry）。各应用通过 shadcn CLI 以 --diff 智能合并方式消费，治理两应用原子组件漂移（拷贝自 CDD3 ui-registry）。",
+  "scripts": {
+    "build:registry": "shadcn build"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "extends": "../storefront-web/tsconfig.json",
+  "include": ["src", "vite.config.ts"]
+}

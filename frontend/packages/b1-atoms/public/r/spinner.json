@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "spinner",
+  "dependencies": [
+    "@phosphor-icons/react",
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/spinner.tsx",
+      "content": "\n\nimport { cn } from \"cn\"\nimport { CircleNotchIcon } from '@phosphor-icons/react'\n\n/**\n * Spinner 组件 - 用于按钮内的加载指示器\n * 配合 Button 使用时，添加 data-icon=\"inline-start\" 属性可获得正确的间距\n */\nexport interface SpinnerProps extends React.ComponentProps<\"svg\"> {\n  /** 无障碍标签 */\n  label?: string\n}\n\nfunction Spinner({ className, label, ...props }: SpinnerProps) {\n  return (\n    <CircleNotchIcon\n      role=\"status\"\n      aria-label={label || \"Loading\"}\n      className={cn(\"size-4 animate-spin\", className)}\n      {...props}\n    />\n  )\n}\n\nexport { Spinner }\n",
+      "type": "registry:ui",
+      "target": "components/ui/spinner.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

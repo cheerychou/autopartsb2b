@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "slider",
+  "dependencies": [
+    "@base-ui/react",
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/slider.tsx",
+      "content": "import { Slider as SliderPrimitive } from \"@base-ui/react/slider\"\n\nimport { cn } from \"cn\"\n\nexport interface SliderProps extends SliderPrimitive.Root.Props {\n  className?: string\n}\n\n/**\n * 滑块组件\n * 用于范围选择，支持单滑块和双滑块模式\n *\n * Base UI 结构：Root > Control > Track(Indicator) + Thumb；\n * radix 的 Range 对应 Base UI 的 Indicator。\n */\nfunction Slider({ className, ...props }: SliderProps) {\n  const values = Array.isArray(props.value)\n    ? props.value\n    : Array.isArray(props.defaultValue)\n      ? props.defaultValue\n      : [props.min ?? 0, props.max ?? 100]\n\n  return (\n    <SliderPrimitive.Root\n      data-slot=\"slider\"\n      className={cn(\n        \"relative flex w-full touch-none select-none items-center\",\n        className\n      )}\n      {...props}\n    >\n      <SliderPrimitive.Control className=\"relative flex w-full touch-none select-none items-center\">\n        <SliderPrimitive.Track\n          data-slot=\"slider-track\"\n          className=\"relative h-2 w-full grow overflow-hidden rounded-full bg-secondary\"\n        >\n          <SliderPrimitive.Indicator\n            data-slot=\"slider-range\"\n            className=\"absolute h-full bg-primary\"\n          />\n        </SliderPrimitive.Track>\n        {Array.from({ length: values.length }, (_, index) => (\n          <SliderPrimitive.Thumb\n            key={index}\n            data-slot=\"slider-thumb\"\n            className=\"block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50\"\n          />\n        ))}\n      </SliderPrimitive.Control>\n    </SliderPrimitive.Root>\n  )\n}\n\nexport { Slider }\n",
+      "type": "registry:ui",
+      "target": "components/ui/slider.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

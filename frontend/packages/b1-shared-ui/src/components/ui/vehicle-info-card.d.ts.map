@@ -1,0 +1,1 @@
+{"version":3,"file":"vehicle-info-card.d.ts","sourceRoot":"","sources":["vehicle-info-card.tsx"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,+BAA+B,CAAA;AAEhE,MAAM,WAAW,oBAAoB;IACnC,WAAW,EAAE,WAAW,CAAA;CACzB;AAED,wBAAgB,eAAe,CAAC,EAAE,WAAW,EAAE,EAAE,oBAAoB,2CA+BpE"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"customer-info-card.d.ts","sourceRoot":"","sources":["customer-info-card.tsx"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,gBAAgB,EAAE,MAAM,+BAA+B,CAAA;AAErE,MAAM,WAAW,qBAAqB;IACpC,YAAY,EAAE,gBAAgB,CAAA;CAC/B;AAED,wBAAgB,gBAAgB,CAAC,EAAE,YAAY,EAAE,EAAE,qBAAqB,2CAyGvE"}

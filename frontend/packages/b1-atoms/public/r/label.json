@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "label",
+  "dependencies": [
+    "cn"
+  ],
+  "files": [
+    {
+      "path": "src/label.tsx",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"cn\"\n\n// Base UI 无 Label 原语（官方 base 版组件即原生 label 元素），\n// 本封装保留项目 className 约定，行为与原生 <label> 一致。\nfunction Label({ className, ...props }: React.ComponentProps<\"label\">) {\n  return (\n    <label\n      data-slot=\"label\"\n      className={cn(\n        \"flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50\",\n        className\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Label }\n",
+      "type": "registry:ui",
+      "target": "components/ui/label.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}
