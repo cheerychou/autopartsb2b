@@ -1,0 +1,14 @@
+.git
+.github
+.zcode
+docs
+frontend
+scripts
+backend/venv
+backend/tests
+backend/staticfiles
+backend/db.sqlite3
+**/__pycache__
+*.pyc
+*.md
+!backend/README.md

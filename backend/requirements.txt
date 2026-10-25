@@ -9,3 +9,5 @@ celery>=5.4
 python-dotenv>=1.0
 djangorestframework-simplejwt>=5.3
 cryptography>=42  # license 验签（Ed25519，D3-A）+ SimpleJWT RS 系备用
+gunicorn>=22  # 生产 WSGI（开发用 runserver；deploy/docker-compose.yml）
+whitenoise>=6.7  # 静态文件直服务（单容器交付，无独立反代时兜底）

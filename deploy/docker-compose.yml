@@ -1,0 +1,38 @@
+# B1-RU 交付单元（单部署单元=backend+pg；24号 SKU-B 私有化）
+# 用法见同目录 README.md；环境变量见 b1ru.env.example
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PGDATABASE:-b1ru}
+      POSTGRES_USER: ${PGUSER:-b1ru}
+      POSTGRES_PASSWORD: ${PGPASSWORD:?请在 b1ru.env 中设置 PGPASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-b1ru} -d ${PGDATABASE:-b1ru}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: b1ru-backend:latest
+    restart: unless-stopped
+    env_file:
+      - b1ru.env
+    environment:
+      DJANGO_ENV: production
+      PGHOST: db
+      PGPORT: "5432"
+    ports:
+      - "${B1RU_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
