@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
 
@@ -16,8 +16,8 @@ urlpatterns = [
     path("api/health/", health),
     # OpenAPI schema → 前端类型生成（make schema）
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    # 目录域只读接口（I1/I2，29号契约；视图随 S1 catalog 拷贝后挂载）
-    # path("catalog/v1/", include("catalog.urls")),
+    # 目录域只读接口（I1/I2，29号契约；匿名可查——买家门控在 storefront 层）
+    path("catalog/v1/", include("catalog.urls")),
     # 交易域接口（随 S2 挂载）
     # path("api/v1/", include("commerce.urls")),
 ]

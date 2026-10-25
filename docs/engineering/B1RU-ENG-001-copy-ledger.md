@@ -29,7 +29,11 @@ updated_at: 2026-10-25
 
 | # | 动作 | 来源 | 前置 | 状态 |
 |---|---|---|---|---|
-| R-A1 | catalog 域 + 根 models.py 车型谱系（27号§5.1 勘定清单） | `backend/data_platform/` | ❓ PR #1079 合并 | 挂起 |
+| R-A1 | 2026-10-25 | `backend/data_platform/`：models.py + choices.py + models_category/padb/product/fitment/terminology/epc/vin_cache.py + serializers_fitment.py + brand_letter.py + management/commands/{import,export}_standalone_seed.py | `backend/catalog/` | **基准=origin/main `f9d40417`**（含 PR #1079 `f396dbcc`；本地 HEAD `5bd54e32` 未触及 data_platform，已核实 diff 为空） | **接入适配（非模型修改）**：①apps.py `label="data_platform"`（FK 字符串引用解析）；②import 路径 `data_platform.`→`catalog.`；③models.py 剥 SeedPackageExecution（28a Q1）；④导入命令剥 labor_spus/labor_part_bindings/administrative_divisions 三实体（27号§一不入包清单）；⑤db_table 前缀保留 `data_platform_`；⑥模型结构零修改 | AI（S1） |
+| R-A1 | 2026-10-25 | —— | `backend/catalog/migrations/0001_init_catalog_domain.py` | —— | 本仓首次生成（非拷贝）；表名沿用 CDD3 前缀 | AI（S1） |
+| R-A1+ | 2026-10-25 | 接入适配补充（同 R-A1 基准）：①import_seed_package.py 增 **--strict / 默认 skip-unknown+告警**（G6 前向兼容，28a Q6 对称实现）；②命令尾部快照登记 **SeedPackageExecution→CatalogPackLog**（F-21/I3 版本登记之源，catalog_version）；③`ready()` 显式注册 models_* 子集（承 CDD3 DataPlatformConfig.ready 机制） | `backend/catalog/` | f9d40417 | 均"接入适配"非模型修改 | AI（S1） |
+| 新增 | 2026-10-25 | ——（本仓新建，非拷贝） | `catalog/models_pack_log.py` + `migrations/0002_add_pack_log.py`；`catalog/services/query.py`（I1 服务层：名称回退链/verified 门控/OE 多形态/双向交叉号）；`catalog/views.py`+`urls.py`（I1 九端点+I2 选件器，匿名放行） | —— | 29号契约的 S1 实现 | AI（S1） |
+| 剥离记录 | 2026-10-25 | export_standalone_seed.py **不拷贝**（总仓侧出包工具，B1-RU 只消费包） | —— | —— | 出包能力在 CDD3（ADT-DP-007 承接） | AI（S1） |
 | R-A2 | RBAC 机制 + 认证中心 + shared 中间件（单租户裁剪） | `store_services/middleware/`、`shared/` | 无 | 待执行 |
 | R-A3 | Makefile/pytest/mypy/coverage 基线/lock 机制 | `backend/` | 无 | 部分已承模式（Makefile/pre-commit 本仓重写，见下"模式承袭"） |
 | R-B1 | ui-registry 全量 + 分发机制 + drift 检查 | `frontend/packages/ui-registry/`、`scripts/check-atom-drift.sh` | 无 | 待执行 |

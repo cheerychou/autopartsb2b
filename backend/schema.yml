@@ -2,5 +2,114 @@ openapi: 3.0.3
 info:
   title: B1-RU API
   version: v1
-paths: {}
+paths:
+  /catalog/v1/brands:
+    get:
+      operationId: catalog_v1_brands_retrieve
+      description: I1-1 品牌列表（找件入口）。
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/brands/{brand_id}/series:
+    get:
+      operationId: catalog_v1_brands_series_retrieve
+      description: I1-2 车系列表。
+      parameters:
+      - in: path
+        name: brand_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/categories/tree:
+    get:
+      operationId: catalog_v1_categories_tree_retrieve
+      description: I1-5 类目树（scope 内；v1 全量后台类目树）。
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/fitments:
+    get:
+      operationId: catalog_v1_fitments_retrieve
+      description: I1-4 按车找件：车型→品类→适配件（29号§三）。
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/picker/candidates:
+    get:
+      operationId: catalog_v1_picker_candidates_retrieve
+      description: I2-1 选件器候选检索（管理端组商品；include_unverified 仅数据员）。
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/search/oe:
+    get:
+      operationId: catalog_v1_search_oe_retrieve
+      description: I1-6 OE 检索：精确 + 交叉号两组（自有货号检索在 commerce，由前台聚合）。
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/series/{series_id}/models:
+    get:
+      operationId: catalog_v1_series_models_retrieve
+      description: I1-3 车型列表（含配置摘要）。
+      parameters:
+      - in: path
+        name: series_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/spus/{spu_id}:
+    get:
+      operationId: catalog_v1_spus_retrieve
+      description: I1-8 SPU 详情（属性值/适配摘要；价格由 commerce 挂关联键）。
+      parameters:
+      - in: path
+        name: spu_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/spus/{spu_id}/interchanges:
+    get:
+      operationId: catalog_v1_spus_interchanges_retrieve
+      description: I1-7 交叉号展开（一个 OE → 多货号，F-04）。
+      parameters:
+      - in: path
+        name: spu_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalog
+      responses:
+        '200':
+          description: No response body
 components: {}
