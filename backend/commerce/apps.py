@@ -1,4 +1,4 @@
-"""commerce 的 Django app 配置。"""
+"""commerce app 配置。"""
 
 from django.apps import AppConfig
 

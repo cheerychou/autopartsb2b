@@ -4,6 +4,163 @@
  */
 
 export interface paths {
+    "/api/v1/buyer-accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。 */
+        get: operations["api_v1_buyer_accounts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/buyer-accounts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。 */
+        get: operations["api_v1_buyer_accounts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/buyer-accounts/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。 */
+        post: operations["api_v1_buyer_accounts_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/buyer-accounts/{id}/reject/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。 */
+        post: operations["api_v1_buyer_accounts_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-12 库存：余额查询 + 出入库记账（@action）。 */
+        get: operations["api_v1_inventory_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-12 库存：余额查询 + 出入库记账（@action）。 */
+        get: operations["api_v1_inventory_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/{id}/transactions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description F-12 库存：余额查询 + 出入库记账（@action）。 */
+        post: operations["api_v1_inventory_transactions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        get: operations["api_v1_products_list"];
+        put?: never;
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        post: operations["api_v1_products_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/{product_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        get: operations["api_v1_products_retrieve"];
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        put: operations["api_v1_products_update"];
+        post?: never;
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        delete: operations["api_v1_products_destroy"];
+        options?: never;
+        head?: never;
+        /** @description F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。 */
+        patch: operations["api_v1_products_partial_update"];
+        trace?: never;
+    };
     "/catalog/v1/brands": {
         parameters: {
             query?: never;
@@ -160,7 +317,279 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        BuyerAccount: {
+            readonly id: number;
+            readonly username: string;
+            buyer_type: components["schemas"]["BuyerTypeEnum"];
+            /** 手机 */
+            phone?: string;
+            /** 企业名称(俄) */
+            company_name_ru?: string;
+            /**
+             * ИНН
+             * @description 俄企税号
+             */
+            inn?: string;
+            /**
+             * 认证状态
+             * @description 仅 corporate 有效；individual 恒 approved
+             *
+             *     * `pending` - 待审核
+             *     * `approved` - 已认证
+             *     * `rejected` - 已驳回
+             */
+            readonly verification_status: components["schemas"]["VerificationStatusEnum"];
+            /** 审核意见 */
+            readonly verification_note: string;
+            readonly can_order: boolean;
+            /**
+             * 审核时间
+             * Format: date-time
+             */
+            readonly verified_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `individual` - 个人客户
+         *     * `corporate` - 企业客户
+         * @enum {string}
+         */
+        BuyerTypeEnum: "individual" | "corporate";
+        DecisionRequest: {
+            /** @default  */
+            note: string;
+        };
+        InventoryItem: {
+            /** Format: uuid */
+            product: string;
+            readonly product_code: string;
+            /** 可售数量 */
+            quantity_available?: number;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        PaginatedBuyerAccountList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["BuyerAccount"][];
+        };
+        PaginatedInventoryItemList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["InventoryItem"][];
+        };
+        PaginatedProductList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Product"][];
+        };
+        /** @description 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。 */
+        PatchedProductRequest: {
+            /**
+             * 目录 SPU ID
+             * Format: uuid
+             */
+            catalog_spu_id?: string;
+            /** 俄语标题 */
+            title_ru?: string;
+            /** 俄语详情 */
+            description_ru?: string;
+            /**
+             * 限时价(₽)
+             * Format: decimal
+             */
+            price_amount?: string;
+            gtin?: string;
+            /** HS编码(ТН ВЭД) */
+            harmonized_code?: string;
+            /** 上架 */
+            is_listed?: boolean;
+        };
+        /** @description 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。 */
+        Product: {
+            /** Format: uuid */
+            readonly product_id: string;
+            /** 商品编码 */
+            readonly product_code: string;
+            /**
+             * 目录 SPU ID
+             * Format: uuid
+             */
+            catalog_spu_id: string;
+            /**
+             * 上架时的数据包版本
+             * @description 选件回填时点的 catalog_version，供追溯（软引用不锁定历史版本）
+             */
+            readonly catalog_version_at_listing: string;
+            /** 俄语标题 */
+            title_ru: string;
+            /** 俄语详情 */
+            description_ru?: string;
+            /**
+             * 限时价(₽)
+             * Format: decimal
+             */
+            price_amount: string;
+            /**
+             * 价格生效
+             * Format: date-time
+             */
+            readonly price_starts_at: string | null;
+            /**
+             * 价格到期（30 天限时价）
+             * Format: date-time
+             */
+            readonly price_expires_at: string;
+            gtin?: string;
+            /** HS编码(ТН ВЭД) */
+            harmonized_code?: string;
+            /** 上架 */
+            is_listed?: boolean;
+            /**
+             * 上架时间
+             * Format: date-time
+             */
+            readonly listed_at: string | null;
+        };
+        /** @description 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。 */
+        ProductRequest: {
+            /**
+             * 目录 SPU ID
+             * Format: uuid
+             */
+            catalog_spu_id: string;
+            /** 俄语标题 */
+            title_ru: string;
+            /** 俄语详情 */
+            description_ru?: string;
+            /**
+             * 限时价(₽)
+             * Format: decimal
+             */
+            price_amount: string;
+            gtin?: string;
+            /** HS编码(ТН ВЭД) */
+            harmonized_code?: string;
+            /** 上架 */
+            is_listed?: boolean;
+        };
+        /** @description 创建入参：catalog_spu_id + title_ru + price_amount；目录校验在服务层（I2-2）。 */
+        ProductWrite: {
+            /** Format: uuid */
+            readonly product_id: string;
+            /** 商品编码 */
+            readonly product_code: string;
+            /** Format: uuid */
+            catalog_spu_id: string;
+            /**
+             * 上架时的数据包版本
+             * @description 选件回填时点的 catalog_version，供追溯（软引用不锁定历史版本）
+             */
+            readonly catalog_version_at_listing: string;
+            /** 俄语标题 */
+            title_ru: string;
+            /** 俄语详情 */
+            description_ru?: string;
+            /**
+             * 限时价(₽)
+             * Format: decimal
+             */
+            price_amount: string;
+            /**
+             * 价格生效
+             * Format: date-time
+             */
+            readonly price_starts_at: string | null;
+            /**
+             * 价格到期（30 天限时价）
+             * Format: date-time
+             */
+            readonly price_expires_at: string;
+            gtin?: string;
+            /** HS编码(ТН ВЭД) */
+            harmonized_code?: string;
+            /** 上架 */
+            is_listed?: boolean;
+            /**
+             * 上架时间
+             * Format: date-time
+             */
+            readonly listed_at: string | null;
+        };
+        /** @description 创建入参：catalog_spu_id + title_ru + price_amount；目录校验在服务层（I2-2）。 */
+        ProductWriteRequest: {
+            /** Format: uuid */
+            catalog_spu_id: string;
+            /** 俄语标题 */
+            title_ru: string;
+            /** 俄语详情 */
+            description_ru?: string;
+            /**
+             * 限时价(₽)
+             * Format: decimal
+             */
+            price_amount: string;
+            gtin?: string;
+            /** HS编码(ТН ВЭД) */
+            harmonized_code?: string;
+            /** 上架 */
+            is_listed?: boolean;
+            /** @default 30 */
+            price_days: number;
+        };
+        TxInRequest: {
+            tx_type: components["schemas"]["TxTypeEnum"];
+            quantity: number;
+            /** @default  */
+            note: string;
+        };
+        /**
+         * @description * `inbound` - 入库
+         *     * `outbound` - 出库
+         *     * `adjust` - 调整
+         * @enum {string}
+         */
+        TxTypeEnum: "inbound" | "outbound" | "adjust";
+        /**
+         * @description * `pending` - 待审核
+         *     * `approved` - 已认证
+         *     * `rejected` - 已驳回
+         * @enum {string}
+         */
+        VerificationStatusEnum: "pending" | "approved" | "rejected";
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -169,6 +598,337 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    api_v1_buyer_accounts_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `individual` - 个人客户
+                 *     * `corporate` - 企业客户
+                 */
+                buyer_type?: "corporate" | "individual";
+                /** @description 分页结果集中的页码。 */
+                page?: number;
+                /**
+                 * @description 仅 corporate 有效；individual 恒 approved
+                 *
+                 *     * `pending` - 待审核
+                 *     * `approved` - 已认证
+                 *     * `rejected` - 已驳回
+                 */
+                verification_status?: "approved" | "pending" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBuyerAccountList"];
+                };
+            };
+        };
+    };
+    api_v1_buyer_accounts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 buyer account 的 唯一整数值。 */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerAccount"];
+                };
+            };
+        };
+    };
+    api_v1_buyer_accounts_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 buyer account 的 唯一整数值。 */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DecisionRequest"];
+                "multipart/form-data": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerAccount"];
+                };
+            };
+        };
+    };
+    api_v1_buyer_accounts_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 buyer account 的 唯一整数值。 */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DecisionRequest"];
+                "multipart/form-data": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerAccount"];
+                };
+            };
+        };
+    };
+    api_v1_inventory_list: {
+        parameters: {
+            query?: {
+                /** @description 分页结果集中的页码。 */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedInventoryItemList"];
+                };
+            };
+        };
+    };
+    api_v1_inventory_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 inventory item 的 唯一整数值。 */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryItem"];
+                };
+            };
+        };
+    };
+    api_v1_inventory_transactions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 inventory item 的 唯一整数值。 */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TxInRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TxInRequest"];
+                "multipart/form-data": components["schemas"]["TxInRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryItem"];
+                };
+            };
+        };
+    };
+    api_v1_products_list: {
+        parameters: {
+            query?: {
+                /** @description 分页结果集中的页码。 */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedProductList"];
+                };
+            };
+        };
+    };
+    api_v1_products_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProductWriteRequest"];
+                "multipart/form-data": components["schemas"]["ProductWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductWrite"];
+                };
+            };
+        };
+    };
+    api_v1_products_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 product 的 UUID 字符串。 */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    api_v1_products_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 product 的 UUID 字符串。 */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProductRequest"];
+                "multipart/form-data": components["schemas"]["ProductRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    api_v1_products_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 product 的 UUID 字符串。 */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_products_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 标识此 product 的 UUID 字符串。 */
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProductRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedProductRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProductRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
     catalog_v1_brands_retrieve: {
         parameters: {
             query?: never;

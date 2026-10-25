@@ -3,6 +3,349 @@ info:
   title: B1-RU API
   version: v1
 paths:
+  /api/v1/buyer-accounts/:
+    get:
+      operationId: api_v1_buyer_accounts_list
+      description: F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。
+      parameters:
+      - in: query
+        name: buyer_type
+        schema:
+          type: string
+          enum:
+          - corporate
+          - individual
+        description: |-
+          * `individual` - 个人客户
+          * `corporate` - 企业客户
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - in: query
+        name: verification_status
+        schema:
+          type: string
+          title: 认证状态
+          enum:
+          - approved
+          - pending
+          - rejected
+        description: |-
+          仅 corporate 有效；individual 恒 approved
+
+          * `pending` - 待审核
+          * `approved` - 已认证
+          * `rejected` - 已驳回
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBuyerAccountList'
+          description: ''
+  /api/v1/buyer-accounts/{id}/:
+    get:
+      operationId: api_v1_buyer_accounts_retrieve
+      description: F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 buyer account 的 唯一整数值。
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuyerAccount'
+          description: ''
+  /api/v1/buyer-accounts/{id}/approve/:
+    post:
+      operationId: api_v1_buyer_accounts_approve_create
+      description: F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 buyer account 的 唯一整数值。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuyerAccount'
+          description: ''
+  /api/v1/buyer-accounts/{id}/reject/:
+    post:
+      operationId: api_v1_buyer_accounts_reject_create
+      description: F-15 客户管理：企业注册审核（approve/reject @action）+ 待审核队列。
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 buyer account 的 唯一整数值。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuyerAccount'
+          description: ''
+  /api/v1/inventory/:
+    get:
+      operationId: api_v1_inventory_list
+      description: F-12 库存：余额查询 + 出入库记账（@action）。
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInventoryItemList'
+          description: ''
+  /api/v1/inventory/{id}/:
+    get:
+      operationId: api_v1_inventory_retrieve
+      description: F-12 库存：余额查询 + 出入库记账（@action）。
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 inventory item 的 唯一整数值。
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItem'
+          description: ''
+  /api/v1/inventory/{id}/transactions/:
+    post:
+      operationId: api_v1_inventory_transactions_create
+      description: F-12 库存：余额查询 + 出入库记账（@action）。
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 inventory item 的 唯一整数值。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TxInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TxInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TxInRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItem'
+          description: ''
+  /api/v1/products/:
+    get:
+      operationId: api_v1_products_list
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductList'
+          description: ''
+    post:
+      operationId: api_v1_products_create
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductWriteRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWrite'
+          description: ''
+  /api/v1/products/{product_id}/:
+    get:
+      operationId: api_v1_products_retrieve
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 product 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: api_v1_products_update
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 product 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: api_v1_products_partial_update
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 product 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: api_v1_products_destroy
+      description: F-10 商品管理：I2 组商品（创建）→ 编辑 → 上架。
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 product 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
   /catalog/v1/brands:
     get:
       operationId: catalog_v1_brands_retrieve
@@ -112,4 +455,453 @@ paths:
       responses:
         '200':
           description: No response body
-components: {}
+components:
+  schemas:
+    BuyerAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+        buyer_type:
+          $ref: '#/components/schemas/BuyerTypeEnum'
+        phone:
+          type: string
+          title: 手机
+          maxLength: 20
+        company_name_ru:
+          type: string
+          title: 企业名称(俄)
+          maxLength: 300
+        inn:
+          type: string
+          title: ИНН
+          description: 俄企税号
+          maxLength: 12
+        verification_status:
+          allOf:
+          - $ref: '#/components/schemas/VerificationStatusEnum'
+          readOnly: true
+          title: 认证状态
+          description: |-
+            仅 corporate 有效；individual 恒 approved
+
+            * `pending` - 待审核
+            * `approved` - 已认证
+            * `rejected` - 已驳回
+        verification_note:
+          type: string
+          readOnly: true
+          title: 审核意见
+        can_order:
+          type: boolean
+          readOnly: true
+        verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: 审核时间
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - buyer_type
+      - can_order
+      - created_at
+      - id
+      - username
+      - verification_note
+      - verification_status
+      - verified_at
+    BuyerTypeEnum:
+      enum:
+      - individual
+      - corporate
+      type: string
+      description: |-
+        * `individual` - 个人客户
+        * `corporate` - 企业客户
+    DecisionRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 200
+    InventoryItem:
+      type: object
+      properties:
+        product:
+          type: string
+          format: uuid
+        product_code:
+          type: string
+          readOnly: true
+        quantity_available:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          title: 可售数量
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - product
+      - product_code
+      - updated_at
+    PaginatedBuyerAccountList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BuyerAccount'
+    PaginatedInventoryItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+    PaginatedProductList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    PatchedProductRequest:
+      type: object
+      description: 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。
+      properties:
+        catalog_spu_id:
+          type: string
+          format: uuid
+          title: 目录 SPU ID
+        title_ru:
+          type: string
+          minLength: 1
+          title: 俄语标题
+          maxLength: 300
+        description_ru:
+          type: string
+          title: 俄语详情
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 限时价(₽)
+        gtin:
+          type: string
+          maxLength: 14
+        harmonized_code:
+          type: string
+          title: HS编码(ТН ВЭД)
+          maxLength: 15
+        is_listed:
+          type: boolean
+          title: 上架
+    Product:
+      type: object
+      description: 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          readOnly: true
+        product_code:
+          type: string
+          readOnly: true
+          title: 商品编码
+        catalog_spu_id:
+          type: string
+          format: uuid
+          title: 目录 SPU ID
+        catalog_version_at_listing:
+          type: string
+          readOnly: true
+          title: 上架时的数据包版本
+          description: 选件回填时点的 catalog_version，供追溯（软引用不锁定历史版本）
+        title_ru:
+          type: string
+          title: 俄语标题
+          maxLength: 300
+        description_ru:
+          type: string
+          title: 俄语详情
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 限时价(₽)
+        price_starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: 价格生效
+        price_expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 价格到期（30 天限时价）
+        gtin:
+          type: string
+          maxLength: 14
+        harmonized_code:
+          type: string
+          title: HS编码(ТН ВЭД)
+          maxLength: 15
+        is_listed:
+          type: boolean
+          title: 上架
+        listed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: 上架时间
+      required:
+      - catalog_spu_id
+      - catalog_version_at_listing
+      - listed_at
+      - price_amount
+      - price_expires_at
+      - price_starts_at
+      - product_code
+      - product_id
+      - title_ru
+    ProductRequest:
+      type: object
+      description: 写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。
+      properties:
+        catalog_spu_id:
+          type: string
+          format: uuid
+          title: 目录 SPU ID
+        title_ru:
+          type: string
+          minLength: 1
+          title: 俄语标题
+          maxLength: 300
+        description_ru:
+          type: string
+          title: 俄语详情
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 限时价(₽)
+        gtin:
+          type: string
+          maxLength: 14
+        harmonized_code:
+          type: string
+          title: HS编码(ТН ВЭД)
+          maxLength: 15
+        is_listed:
+          type: boolean
+          title: 上架
+      required:
+      - catalog_spu_id
+      - price_amount
+      - title_ru
+    ProductWrite:
+      type: object
+      description: 创建入参：catalog_spu_id + title_ru + price_amount；目录校验在服务层（I2-2）。
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          readOnly: true
+        product_code:
+          type: string
+          readOnly: true
+          title: 商品编码
+        catalog_spu_id:
+          type: string
+          format: uuid
+        catalog_version_at_listing:
+          type: string
+          readOnly: true
+          title: 上架时的数据包版本
+          description: 选件回填时点的 catalog_version，供追溯（软引用不锁定历史版本）
+        title_ru:
+          type: string
+          title: 俄语标题
+          maxLength: 300
+        description_ru:
+          type: string
+          title: 俄语详情
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 限时价(₽)
+        price_starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: 价格生效
+        price_expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 价格到期（30 天限时价）
+        gtin:
+          type: string
+          maxLength: 14
+        harmonized_code:
+          type: string
+          title: HS编码(ТН ВЭД)
+          maxLength: 15
+        is_listed:
+          type: boolean
+          title: 上架
+        listed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: 上架时间
+      required:
+      - catalog_spu_id
+      - catalog_version_at_listing
+      - listed_at
+      - price_amount
+      - price_expires_at
+      - price_starts_at
+      - product_code
+      - product_id
+      - title_ru
+    ProductWriteRequest:
+      type: object
+      description: 创建入参：catalog_spu_id + title_ru + price_amount；目录校验在服务层（I2-2）。
+      properties:
+        catalog_spu_id:
+          type: string
+          format: uuid
+        title_ru:
+          type: string
+          minLength: 1
+          title: 俄语标题
+          maxLength: 300
+        description_ru:
+          type: string
+          title: 俄语详情
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          title: 限时价(₽)
+        gtin:
+          type: string
+          maxLength: 14
+        harmonized_code:
+          type: string
+          title: HS编码(ТН ВЭД)
+          maxLength: 15
+        is_listed:
+          type: boolean
+          title: 上架
+        price_days:
+          type: integer
+          maximum: 90
+          minimum: 1
+          writeOnly: true
+          default: 30
+      required:
+      - catalog_spu_id
+      - price_amount
+      - title_ru
+    TxInRequest:
+      type: object
+      properties:
+        tx_type:
+          $ref: '#/components/schemas/TxTypeEnum'
+        quantity:
+          type: integer
+        note:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 200
+      required:
+      - quantity
+      - tx_type
+    TxTypeEnum:
+      enum:
+      - inbound
+      - outbound
+      - adjust
+      type: string
+      description: |-
+        * `inbound` - 入库
+        * `outbound` - 出库
+        * `adjust` - 调整
+    VerificationStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - 待审核
+        * `approved` - 已认证
+        * `rejected` - 已驳回

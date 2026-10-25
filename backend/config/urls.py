@@ -18,6 +18,6 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # 目录域只读接口（I1/I2，29号契约；匿名可查——买家门控在 storefront 层）
     path("catalog/v1/", include("catalog.urls")),
-    # 交易域接口（随 S2 挂载）
-    # path("api/v1/", include("commerce.urls")),
+    # 交易域接口（commerce，RBAC 默认权限链）
+    path("api/v1/", include("commerce.urls")),
 ]
