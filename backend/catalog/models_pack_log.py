@@ -7,6 +7,28 @@ v1 新增表（"只加不改"纪律允许的扩展表，copy-ledger 登记）：
 
 from django.db import models
 
+# 实例支持的目录 schema 版本锚点（27号§三 schema 双轨）：随实例代码能力升级而升。
+# 兼容窗口 = [MAJOR−1, MAJOR]（27号§六.1）——导入命令据此放行/拒收。
+SUPPORTED_SCHEMA_VER = "1.0"
+
+
+def schema_ver_supported(pack_schema_ver: str) -> tuple[bool, str]:
+    """27号§六.2 导入时校验：窗口内放行；高于窗口=须先升级应用；低于窗口=陈旧包拒收。
+
+    返回 (是否放行, 拒收原因)；无法解析的 schema_ver 一律不放行（预检零容差）。
+    """
+    raw = str(pack_schema_ver or "").strip()
+    try:
+        major = int(raw.split(".", 1)[0])
+    except ValueError:
+        return False, f"包 schema_ver 无法解析: {raw or '(缺省)'}"
+    supported_major = int(SUPPORTED_SCHEMA_VER.split(".", 1)[0])
+    if major > supported_major:
+        return False, f"包 schema_ver={raw} 高于实例支持窗口，请先升级应用（27号§六.2）"
+    if major < supported_major - 1:
+        return False, f"包 schema_ver={raw} 低于实例支持窗口（陈旧包拒收，27号§六.2）"
+    return True, ""
+
 
 class CatalogPackLog(models.Model):
     """已应用数据包登记：一行 = 一次成功导入。"""

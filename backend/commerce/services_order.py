@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from commerce.models_customer import BuyerAccount
@@ -32,11 +32,14 @@ class OrderError(Exception):
 
 
 def _effective_price(product: Product, now):
-    """限时价有效性：过期价格不可成交（F-11 到期自动下价引擎前的防御）。"""
+    """限时价有效性：过期价格不可成交（F-11 到期自动下价引擎前的防御）。
+
+    message_ru 一律俄语——本异常直出买家端（26号§六 i18n，走查 P2#4 修复）。
+    """
     if product.price_starts_at and now < product.price_starts_at:
-        raise OrderError.of("PRICE_NOT_ACTIVE", "价格未生效")
+        raise OrderError.of("PRICE_NOT_ACTIVE", "Цена ещё не начала действовать")
     if product.price_expires_at and now > product.price_expires_at:
-        raise OrderError.of("PRICE_EXPIRED", "限时价已过期，商品待重新定价")
+        raise OrderError.of("PRICE_EXPIRED", "Срок действия цены истёк, товар ожидает переоценку")
     return product.price_amount
 
 
@@ -49,17 +52,13 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
     - 空购物车 → OrderError。
     """
     if not account.can_order:
-        suffix = (
-            "（企业认证审核中）"
-            if account.verification_status == BuyerAccount.VerificationStatus.PENDING
-            else ""
-        )
-        raise OrderError.of("BUYER_NOT_ALLOWED", f"当前账号不可下单{suffix}")
+        # 服务层兜底文案（正常路径视图层 CORPORATE_PENDING/REJECTED 先拦）——同为俄语
+        raise OrderError.of("BUYER_NOT_ALLOWED", "Заказ недоступен для текущей учётной записи")
     items = list(
         CartItem.objects.filter(account=account).select_related("product", "product__inventory")
     )
     if not items:
-        raise OrderError.of("CART_EMPTY", "购物车为空")
+        raise OrderError.of("CART_EMPTY", "Корзина пуста")
     # 下架/过期商品在下单时点剔除（评审二节：管理端下架≠可成交）
     from django.utils import timezone as _tz
 
@@ -70,16 +69,13 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
         and not (it.product.price_expires_at and it.product.price_expires_at < _tz.now())
     ]
     if not items:
-        raise OrderError.of("CART_UNAVAILABLE", "购物车商品已下架或过期")
+        raise OrderError.of("CART_UNAVAILABLE", "Товары в корзине более недоступны к заказу")
 
     now = timezone.now()
-    order = Order.objects.create(
-        order_id=uuid.uuid4(),
-        order_no=_next_order_no(),
+    order = _create_order_row(
         account=account,
         payment_method=payment_method,
         shipping_address=shipping_address,
-        total_amount=0,
     )
     total = 0
     for item in items:
@@ -87,7 +83,7 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
         price = _effective_price(product, now)
         inv, _ = InventoryItem.objects.select_for_update().get_or_create(product=product)
         if inv.quantity_available < item.quantity:
-            raise OrderError.of("OUT_OF_STOCK", f"库存不足: {product.title_ru}")
+            raise OrderError.of("OUT_OF_STOCK", f"Недостаточно товара: {product.title_ru}")
         line = price * item.quantity
         OrderItem.objects.create(
             order=order,
@@ -118,11 +114,37 @@ def place_order(*, account: BuyerAccount, shipping_address: str, payment_method:
     return order
 
 
-def _next_order_no() -> str:
-    """订单号：ORD+日期+日内序 + 存在性重试（评审二节：并发撞号 500 修复——
-    撞号即重试递增，unique 约束为最后防线）。"""
+def _next_order_no(*, skip: int = 0) -> str:
+    """订单号：ORD+日期+日内序（skip=撞号重试时强制前跳的序号数）。"""
     date_part = timezone.localdate().strftime("%Y%m%d")
-    seq = Order.objects.filter(order_no__startswith=f"ORD{date_part}").count() + 1
+    seq = Order.objects.filter(order_no__startswith=f"ORD{date_part}").count() + 1 + skip
     while Order.objects.filter(order_no=f"ORD{date_part}{seq:04d}").exists():
         seq += 1
     return f"ORD{date_part}{seq:04d}"
+
+
+def _create_order_row(
+    *, account: BuyerAccount, payment_method: str, shipping_address: str
+) -> Order:
+    """创建订单行：并发撞号重试（评审二节"撞号 500"的落地实现——此前 docstring
+    宣称重试但代码无重试，走查 P2#7 修复）。
+
+    机制：savepoint 内插入，IntegrityError 即回滚 savepoint（外层下单事务不受污染）
+    并 skip 递增重试；unique 约束为最后防线；重试上限 5 次后按业务错误返回买家。
+    """
+    for attempt in range(5):
+        try:
+            with transaction.atomic():  # savepoint
+                return Order.objects.create(
+                    order_id=uuid.uuid4(),
+                    order_no=_next_order_no(skip=attempt),
+                    account=account,
+                    payment_method=payment_method,
+                    shipping_address=shipping_address,
+                    total_amount=0,
+                )
+        except IntegrityError:
+            continue
+    raise OrderError.of(
+        "ORDER_NO_CONFLICT", "Не удалось зарезервировать номер заказа, попробуйте ещё раз"
+    )

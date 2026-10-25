@@ -65,8 +65,20 @@ def import_codes(request, batch_no: str):
     s = CodeListInSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     product = get_object_or_404(Product, product_id=s.validated_data["product_id"])
-    # 受控品类校验：按 ТН ВЭД 字典（✅裁定 7——扩围改字典）
-    if product.harmonized_code and not MarkedCategoryDict.is_marked(product.harmonized_code):
+    # 受控品类校验：按 ТН ВЭД 字典（✅裁定 7——扩围改字典）。
+    # fail-closed（走查 P2#5 修复）：缺 HS 视为无法判定 → 拒绝，不再跳过校验
+    if not product.harmonized_code:
+        return Response(
+            {
+                "error": {
+                    "code": "400",
+                    "error_code": "HS_CODE_MISSING",
+                    "message": f"商品 {product.product_code} 缺少 ТН ВЭД 编码，无法判定赋码品类",
+                }
+            },
+            status=400,
+        )
+    if not MarkedCategoryDict.is_marked(product.harmonized_code):
         return Response(
             {
                 "error": {

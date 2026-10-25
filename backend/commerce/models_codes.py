@@ -28,10 +28,14 @@ class MarkedCategoryDict(models.Model):
 
     @classmethod
     def is_marked(cls, harmonized_code: str) -> bool:
-        """按 HS/ТН ВЭД 前缀匹配（最长前缀命中）。"""
+        """按 HS/ТН ВЭД 前缀匹配（最长前缀命中）。
+
+        前缀与码值同规则归一（剥空格）——ТН ВЭД 常见带空格形态（如 8708 30），
+        只剥码值不剥前缀会永远匹配不上（走查修复中实证的存量 bug）。
+        """
         code = (harmonized_code or "").replace(" ", "")
         for row in cls.objects.filter(is_active=True).order_by("-tnved_prefix"):
-            if code.startswith(row.tnved_prefix):
+            if code.startswith(row.tnved_prefix.replace(" ", "")):
                 return True
         return False
 

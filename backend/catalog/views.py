@@ -156,7 +156,17 @@ def fitments(request):
     """I1-4 按车找件：车型→品类→适配件（29号§三）。"""
     model_id = request.query_params.get("model_id", "")
     if not model_id:
-        return Response({"error": {"code": "400", "message": "model_id 必填"}}, status=400)
+        # 26号§六 i18n：I1 买家可达，错误禁中文直出（error_code 供前端语言包渲染）
+        return Response(
+            {
+                "error": {
+                    "code": "400",
+                    "error_code": "MODEL_ID_REQUIRED",
+                    "message": "Не указан model_id",
+                }
+            },
+            status=400,
+        )
     query = Q.FitmentQuery(
         model_id=model_id,
         category_id=request.query_params.get("category_id") or None,
@@ -188,7 +198,16 @@ def search_oe(request):
     """I1-6 OE 检索：精确 + 交叉号两组（自有货号检索在 commerce，由前台聚合）。"""
     q = request.query_params.get("q", "")
     if len(Q.normalize_oe(q)) < 4:
-        return Response({"error": {"code": "400", "message": "检索号过短"}}, status=400)
+        return Response(
+            {
+                "error": {
+                    "code": "400",
+                    "error_code": "ARTICLE_TOO_SHORT",
+                    "message": "Артикул слишком короткий",
+                }
+            },
+            status=400,
+        )
     direct, xref = Q.search_oe(q)
     return Response(
         {
@@ -208,7 +227,8 @@ def spu_detail(request, spu_id: str):
     spu = Q.spu_detail(spu_id)
     if spu is None:
         return Response(
-            {"error": {"code": "404", "message": "SPU 不存在或品类包范围外"}}, status=404
+            {"error": {"code": "404", "error_code": "NOT_FOUND", "message": "Товар не найден"}},
+            status=404,
         )
     card = SpuCard(spu).data
     card["attributes"] = [

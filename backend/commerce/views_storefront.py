@@ -451,7 +451,11 @@ def cancel_my_order(request, order_id: uuid.UUID):
     from commerce import services_fulfillment
 
     try:
-        services_fulfillment.cancel_order(order, note="buyer cancel", cancelled_by=request.user)
+        # 服务层内部 select_for_update 重取实例——必须接收返回值（走查 P1-2 修复：
+        # 此前回包用外层旧对象，status 恒为取消前状态）
+        order = services_fulfillment.cancel_order(
+            order, note="buyer cancel", cancelled_by=request.user
+        )
     except services_fulfillment.OrderStateError as e:
         return err(409, e.code, e.message_ru)
     return Response({"data": {"order_no": order.order_no, "status": order.status}})

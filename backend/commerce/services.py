@@ -35,10 +35,15 @@ def create_product_from_catalog(
     gtin: str = "",
     harmonized_code: str = "",
 ) -> Product:
-    """F-10 组商品（I2-2 回填契约）：校验目录件存在 → 建可售 SKU（待上架）。"""
+    """F-10 组商品（I2-2 回填契约）：校验目录件存在 → 建可售 SKU（待上架）。
+
+    gtin/harmonized_code 未显式提供时从目录件回填（SPU 是 HS 的权威源——
+    手工重录必然漂移，且 N2 受控品类判定依赖 commerce 侧快照非空；走查 P2#5 配套）。
+    """
     from catalog.models_product import SPU  # 进程内引用 catalog 域（软引用校验）
 
-    if not SPU.objects.filter(spu_id=catalog_spu_id, spu_status="active").exists():
+    spu = SPU.objects.filter(spu_id=catalog_spu_id, spu_status="active").first()
+    if spu is None:
         raise CatalogRefError(f"目录件不存在或不可售: {catalog_spu_id}")
     now = timezone.now()
     return Product.objects.create(
@@ -50,8 +55,8 @@ def create_product_from_catalog(
         price_amount=price_amount,
         price_starts_at=now,
         price_expires_at=now + timedelta(days=price_days),
-        gtin=gtin,
-        harmonized_code=harmonized_code,
+        gtin=gtin or spu.gtin or "",
+        harmonized_code=harmonized_code or spu.harmonized_code or "",
     )
 
 

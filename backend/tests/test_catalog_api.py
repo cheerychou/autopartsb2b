@@ -172,8 +172,11 @@ def test_pack_log_current_version_default():
     assert CatalogPackLog.current_version() == "unknown"
 
 
-def _make_package(path, version="test-v1", order=None, counts=None):
-    """构造最小种子包（manifest+brands/categories 数据），验证导入幂等。"""
+def _make_package(path, version="test-v1", order=None, counts=None, schema_ver="1.0"):
+    """构造最小种子包（manifest+brands/categories 数据），验证导入幂等。
+
+    schema_ver 是 27号§三 契约字段——导入器按 27号§六.2 做窗口校验（走查修复后强制）。
+    """
     order = order or ["brands", "categories"]
     rows = {
         "brands": [
@@ -201,6 +204,7 @@ def _make_package(path, version="test-v1", order=None, counts=None):
     with zipfile.ZipFile(buf, "w") as zf:
         manifest = {
             "version": version,
+            "schema_ver": schema_ver,
             "import_order": order,
             "counts": counts or {k: len(v) for k, v in rows.items()},
         }

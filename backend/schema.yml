@@ -3,6 +3,106 @@ info:
   title: B1-RU API
   version: v1
 paths:
+  /api/v1/batches/:
+    post:
+      operationId: api_v1_batches_create
+      description: 创建进口批次（贴标工作台第一步；F-16）。
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BatchInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BatchInRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/batches/{batch_no}/codes/:
+    post:
+      operationId: api_v1_batches_codes_create
+      description: |-
+        F-16 贴标工作台：批次码清单导入（ЧЗ 导出/Excel 粘贴的码值列表）。
+
+        支持从中国远程调用（25号§一.5：贴标在中国侧、核销在俄境）。
+      parameters:
+      - in: path
+        name: batch_no
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeListInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CodeListInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CodeListInRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/batches/{batch_no}/print-list/:
+    get:
+      operationId: api_v1_batches_print_list_retrieve
+      description: F-16 打印清单导出：批次内已贴码清单（DataMatrix 内容+GTIN，供标签打印）。
+      parameters:
+      - in: path
+        name: batch_no
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/batches/{batch_no}/receive/:
+    post:
+      operationId: api_v1_batches_receive_create
+      description: 收货验码（labelled→in_stock，同步库存入账）；可选按码精确验收。
+      parameters:
+      - in: path
+        name: batch_no
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReceiveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReceiveRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/buyer-accounts/:
     get:
       operationId: api_v1_buyer_accounts_list
@@ -138,6 +238,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/BuyerAccount'
           description: ''
+  /api/v1/codes/aging/:
+    get:
+      operationId: api_v1_codes_aging_retrieve
+      description: 码报表：在库码数 + 批次账龄分桶（25号§2.6）。
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/codes/outbound/:
+    post:
+      operationId: api_v1_codes_outbound_create
+      description: 按码出库（in_stock→outbound，销售核销；库存同步扣减）。
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutboundRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OutboundRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OutboundRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/codes/return/:
+    post:
+      operationId: api_v1_codes_return_create
+      description: 退货回转（outbound→returned→in_stock 重新入转；库存同步回补）。
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReturnRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReturnRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/inventory/:
     get:
       operationId: api_v1_inventory_list
@@ -446,6 +603,85 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/products/{product_id}/relist/:
+    post:
+      operationId: api_v1_products_relist_create
+      description: |-
+        F-11 重挂（限时价到期后的唯一恢复路径）：重新定价 + 重启窗口 + 上架。
+
+        走查 P1-1（2026-10-25）：此前 relist_with_new_price 无生产调用方、
+        价格窗口字段序列化器只读 → 到期商品永久不可售。本端点补全闭环。
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        description: 标识此 product 的 UUID 字符串。
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RelistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RelistRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/v1/reports/catalog-coverage/:
+    get:
+      operationId: api_v1_reports_catalog_coverage_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reports/codes-aging/:
+    get:
+      operationId: api_v1_reports_codes_aging_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reports/sales/:
+    get:
+      operationId: api_v1_reports_sales_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reports/slow-movers/:
+    get:
+      operationId: api_v1_reports_slow_movers_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /catalog/v1/brands:
     get:
       operationId: catalog_v1_brands_retrieve
@@ -566,6 +802,38 @@ paths:
           type: string
           format: uuid
         required: true
+      tags:
+      - catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/staging/export-feed:
+    post:
+      operationId: catalog_v1_staging_export_feed_create
+      description: I4 后半：FEED 变更集导出（tar.gz，人工上传总仓；data_steward/owner）。
+      tags:
+      - catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /catalog/v1/staging/fitments:
+    get:
+      operationId: catalog_v1_staging_fitments_retrieve
+      description: F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。
+      tags:
+      - catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: catalog_v1_staging_fitments_create
+      description: F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。
       tags:
       - catalog
       security:
@@ -758,6 +1026,20 @@ paths:
           description: No response body
 components:
   schemas:
+    BatchInRequest:
+      type: object
+      properties:
+        batch_no:
+          type: string
+          minLength: 1
+          maxLength: 32
+        customs_declaration:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 64
+      required:
+      - batch_no
     BuyerAccount:
       type: object
       properties:
@@ -839,6 +1121,26 @@ components:
       required:
       - payment_method
       - shipping_address
+    CodeListInRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        gtin:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 14
+        code_values:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+      required:
+      - code_values
+      - product_id
     ConfirmPaymentRequest:
       type: object
       properties:
@@ -896,6 +1198,24 @@ components:
       required:
       - password
       - username
+    OutboundRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        code_values:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+        order_id:
+          type: string
+          format: uuid
+      required:
+      - code_values
+      - product_id
     PaginatedBuyerAccountList:
       type: object
       required:
@@ -1215,6 +1535,15 @@ components:
       - catalog_spu_id
       - price_amount
       - title_ru
+    ReceiveRequest:
+      type: object
+      properties:
+        code_values:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
     RegisterRequest:
       type: object
       properties:
@@ -1247,6 +1576,32 @@ components:
       - buyer_type
       - password
       - username
+    RelistRequest:
+      type: object
+      description: F-11 重挂入参：新价格 + 新窗口天数（窗口重启，调价历史留在 OrderItem 快照）。
+      properties:
+        price_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        price_days:
+          type: integer
+          maximum: 90
+          minimum: 1
+          default: 30
+      required:
+      - price_amount
+    ReturnRequest:
+      type: object
+      properties:
+        code_values:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+      required:
+      - code_values
     ShipRequest:
       type: object
       properties:

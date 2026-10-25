@@ -4,6 +4,8 @@ RBAC：全局默认 RoleBasedPermission；各 ViewSet 声明 ACTION_PERMISSIONS
 （read/write/manage 三档，backend/CLAUDE.md）。买家端独立认证（S3），本文件均为管理端。
 """
 
+from decimal import Decimal
+
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
@@ -11,7 +13,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from catalog.services.query import catalog_version
-from commerce import services, services_fulfillment
+from commerce import services, services_fulfillment, services_pricing
 from commerce.models_customer import BuyerAccount
 from commerce.models_order import Order
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
@@ -72,6 +74,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         "partial_update": "products:write",
         "destroy": "products:manage",
         "list_all": "products:read",
+        "relist": "products:write",
     }
 
     def get_serializer_class(self):
@@ -100,6 +103,32 @@ class ProductViewSet(viewsets.ModelViewSet):
     def list_all(self, request, *args, **kwargs):  # pragma: no cover
         return self.list(request, *args, **kwargs)
 
+    class RelistSerializer(serializers.Serializer):
+        """F-11 重挂入参：新价格 + 新窗口天数（窗口重启，调价历史留在 OrderItem 快照）。"""
+
+        price_amount = serializers.DecimalField(
+            max_digits=12, decimal_places=2, min_value=Decimal("0.01")
+        )
+        price_days = serializers.IntegerField(default=30, min_value=1, max_value=90)
+
+    @extend_schema(request=RelistSerializer)
+    @action(methods=["post"], detail=True, url_path="relist")
+    def relist(self, request, pk=None):
+        """F-11 重挂（限时价到期后的唯一恢复路径）：重新定价 + 重启窗口 + 上架。
+
+        走查 P1-1（2026-10-25）：此前 relist_with_new_price 无生产调用方、
+        价格窗口字段序列化器只读 → 到期商品永久不可售。本端点补全闭环。
+        """
+        product = self.get_object()
+        s = self.RelistSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        product = services_pricing.relist_with_new_price(
+            product,
+            price_amount=s.validated_data["price_amount"],
+            price_days=s.validated_data["price_days"],
+        )
+        return Response(ProductSerializer(product).data)
+
 
 class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
     """F-12 库存：余额查询 + 出入库记账（@action）。"""
@@ -115,7 +144,13 @@ class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
             fields = ["product", "product_code", "quantity_available", "updated_at"]
 
     serializer_class = InventoryItemSerializer
-    ACTION_PERMISSIONS = {"list": "inventory:read", "retrieve": "inventory:read"}
+    # 出入库记账是写操作：必须声明权限码（走查 P1-3 修复——未声明的 @action 会被
+    # fail-closed 回退为"任一管理角色"，finance/data_steward 将越权写库存）
+    ACTION_PERMISSIONS = {
+        "list": "inventory:read",
+        "retrieve": "inventory:read",
+        "record": "inventory:write",
+    }
 
     class TxInSerializer(serializers.Serializer):
         tx_type = serializers.ChoiceField(choices=InventoryTransaction.TxType.choices)
@@ -236,7 +271,9 @@ def confirm_payment(request, order_id):
     s = ConfirmPaymentSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     try:
-        services_fulfillment.confirm_payment(
+        # 服务层内部 select_for_update 重取实例——必须接收返回值（走查 P1-2 修复：
+        # 此前用外层旧对象回包，status 恒为迁移前的 awaiting_confirmation）
+        order = services_fulfillment.confirm_payment(
             order,
             confirmed_by=request.user,
             amount=s.validated_data["amount"],

@@ -187,9 +187,20 @@ class Command(BaseCommand):
         if pack_type not in {"INIT", "DELTA", "SNAP"}:
             raise CommandError(f"未知 pack_type: {pack_type}")
 
-        # ---- 幂等（包级）：同 pack_id 已登记 → no-op ----
-        from catalog.models_pack_log import CatalogPackLog
+        # ---- schema 兼容窗口（27号§六.2，预检零容差的一部分）----
+        from catalog.models_pack_log import (
+            SUPPORTED_SCHEMA_VER,
+            CatalogPackLog,
+            schema_ver_supported,
+        )
 
+        _ok, _why = schema_ver_supported(schema_ver)
+        if not _ok:
+            raise CommandError(
+                f"拒收: {_why}（实例支持 {SUPPORTED_SCHEMA_VER}，窗口=[MAJOR−1, MAJOR]）"
+            )
+
+        # ---- 幂等（包级）：同 pack_id 已登记 → no-op ----
         if CatalogPackLog.objects.filter(pack_id=pack_id).exists():
             self.stdout.write(self.style.WARNING(f"包 {pack_id} 已导入过，跳过（幂等）"))
             return
