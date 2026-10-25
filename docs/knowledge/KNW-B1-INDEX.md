@@ -13,10 +13,14 @@ updated_at: 2026-10-25
 
 ## 条目索引
 
-（空册开张——第一条教训入库时更新本索引；索引行 ≤200 字符：主题 + 终态 + 何时需要读。）
-
 | 编号 | 主题 | 何时读 |
 |---|---|---|
+| [KNW-B1-EXP-001](KNW-B1-EXP-001-drf-api-view-attribute-trap.md) | DRF api_view 策略属性只认官方列表，自定义装饰器属性被静默丢弃 | 给 api_view 函数视图写自定义装饰器/权限标记时 |
+| [KNW-B1-EXP-002](KNW-B1-EXP-002-rbac-fail-open-fund-loss.md) | 权限 fail-open + 共用 JWT = 买家自助核销的资金级漏洞 | 写/改权限判定、新增端点、评审交易链路时 |
+| [KNW-B1-EXP-003](KNW-B1-EXP-003-verification-claim-inflation.md) | 聚合式验收声明（"全过"）注水——逐条对照+勘误格式 | 写 commit/文档/汇报中"完成/验收"字样时 |
+| [KNW-B1-EXP-004](KNW-B1-EXP-004-copy-django-domain-adaptation.md) | 受控拷贝 Django 模型域的接入适配三件套 | 跨项目拷贝模型域；makemigrations "No changes" 时 |
+| [KNW-B1-EXP-005](KNW-B1-EXP-005-data-assertion-baseline.md) | 数据断言必须带基准日期与库别（两次被现实修正） | 写含数字的结论；引用 CDD3 库状态时 |
+| [KNW-B1-EXP-006](KNW-B1-EXP-006-sprint-branch-commit-discipline.md) | 快节奏 Sprint 的分支与提交纪律 | 每个 Sprint 开工第一分钟；写 commit message 时 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 
