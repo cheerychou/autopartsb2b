@@ -24,5 +24,6 @@ class CatalogConfig(AppConfig):
         import catalog.models_pack_log  # noqa: F401  (本仓扩展表，非拷贝)
         import catalog.models_padb  # noqa: F401
         import catalog.models_product  # noqa: F401
+        import catalog.models_staging  # noqa: F401  (F-23/I4，本仓扩展)
         import catalog.models_terminology  # noqa: F401
         import catalog.models_vin_cache  # noqa: F401

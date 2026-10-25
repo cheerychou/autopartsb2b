@@ -14,4 +14,6 @@ urlpatterns = [
     path("spus/<uuid:spu_id>", views.spu_detail),
     path("spus/<uuid:spu_id>/interchanges", views.spu_interchanges),
     path("picker/candidates", views.picker_candidates),
+    path("staging/fitments", views.staged_fitments),
+    path("staging/export-feed", views.export_feed),
 ]

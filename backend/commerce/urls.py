@@ -3,7 +3,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from commerce import views, views_storefront
+from commerce import views, views_codes, views_storefront
 
 router = DefaultRouter()
 router.register("products", views.ProductViewSet, basename="products")
@@ -30,4 +30,17 @@ admin_patterns = [
     path("pricing/deactivate-expired/", views.deactivate_expired_prices),
     path("orders/<uuid:order_id>/confirm-payment/", views.confirm_payment),
     path("orders/<uuid:order_id>/ship/", views.ship_order),
+    # S5 N2 赋码（F-16/25号，导入式 v1）
+    path("batches/", views_codes.create_batch),
+    path("batches/<str:batch_no>/codes/", views_codes.import_codes),
+    path("batches/<str:batch_no>/print-list/", views_codes.print_list),
+    path("batches/<str:batch_no>/receive/", views_codes.receive_batch),
+    path("codes/outbound/", views_codes.outbound_codes),
+    path("codes/return/", views_codes.return_codes),
+    path("codes/aging/", views_codes.codes_aging),
+    # F-17 报表
+    path("reports/sales/", views_codes.report_sales),
+    path("reports/slow-movers/", views_codes.report_slow_movers),
+    path("reports/catalog-coverage/", views_codes.report_catalog_coverage),
+    path("reports/codes-aging/", views_codes.report_codes_aging),
 ]

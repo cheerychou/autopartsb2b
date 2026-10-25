@@ -271,3 +271,86 @@ class CatalogViewSet(viewsets.ViewSet):
     @extend_schema(exclude=True)
     def list(self, *a, **kw):  # pragma: no cover
         return Response([])
+
+
+# ---------- F-23 补录暂存/回流导出（I4 前半，data_steward 专属） ----------
+
+
+class StagedFitmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = __import__("catalog.models_staging", fromlist=["StagedFitment"]).StagedFitment
+        fields = [
+            "staged_id",
+            "spu",
+            "series",
+            "qualifiers",
+            "year_from",
+            "year_to",
+            "note",
+            "status",
+            "created_at",
+        ]
+
+
+@api_view(["GET", "POST"])
+@permission_classes([])
+def staged_fitments(request):
+    """F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。"""
+    from catalog.models_staging import StagedFitment
+    from shared.permissions import has_permission
+
+    if request.method == "GET":
+        # 匿名可见性=公开目录不含暂存数据：读也限 data_steward（评审 P0-3 同语义）
+        if not has_permission(request.user, "catalog:write"):
+            return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
+        rows = StagedFitment.objects.all().order_by("-created_at")
+        return Response(
+            {
+                "data": StagedFitmentSerializer(rows, many=True).data,
+                "meta": _meta(request, rows.count()),
+            }
+        )
+    # POST
+    if not has_permission(request.user, "catalog:write"):
+        return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
+    s = StagedFitmentSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    row = StagedFitment.objects.create(
+        staged_id=__import__("uuid").uuid4(),
+        spu_id=(
+            s.validated_data["spu"].spu_id
+            if hasattr(s.validated_data["spu"], "spu_id")
+            else s.validated_data["spu"]
+        ),
+        series_id=(
+            s.validated_data.get("series").series_id if s.validated_data.get("series") else None
+        ),
+        qualifiers=s.validated_data.get("qualifiers") or {},
+        year_from=s.validated_data.get("year_from"),
+        year_to=s.validated_data.get("year_to"),
+        note=s.validated_data.get("note", ""),
+    )
+    return Response({"data": StagedFitmentSerializer(row).data}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([])
+def export_feed(request):
+    """I4 后半：FEED 变更集导出（tar.gz，人工上传总仓；data_steward/owner）。"""
+    from shared.permissions import has_permission
+
+    if not has_permission(request.user, "catalog:write"):
+        return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
+    from catalog.services_feed import export_feed
+
+    try:
+        feed_id, payload = export_feed()
+    except ValueError as e:
+        return Response(
+            {"error": {"code": "409", "error_code": "EMPTY_FEED", "message": str(e)}}, status=409
+        )
+    from django.http import HttpResponse
+
+    resp = HttpResponse(payload, content_type="application/gzip")
+    resp["Content-Disposition"] = f'attachment; filename="{feed_id}.tar.gz"'
+    return resp
