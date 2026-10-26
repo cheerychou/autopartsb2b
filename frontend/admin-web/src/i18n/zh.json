@@ -1,5 +1,7 @@
 {
-  "app": { "title": "商城管理端" },
+  "app": {
+    "title": "商城管理端"
+  },
   "nav": {
     "products": "商品管理",
     "inventory": "库存",
@@ -102,7 +104,9 @@
     "codeValues": "码值（每行一个）",
     "productId": "商品ID",
     "gtin": "GTIN",
-    "state": "状态"
+    "state": "状态",
+    "actions": "操作",
+    "customsExport": "报关清单"
   },
   "reports": {
     "title": "报表（F-17）",
@@ -119,6 +123,13 @@
     "completed": "已完成",
     "cancelled": "已取消"
   },
-  "verify": { "pending": "待审核", "approved": "已认证", "rejected": "已驳回" },
-  "errors": { "generic": "操作失败", "forbidden": "无权限" }
+  "verify": {
+    "pending": "待审核",
+    "approved": "已认证",
+    "rejected": "已驳回"
+  },
+  "errors": {
+    "generic": "操作失败",
+    "forbidden": "无权限"
+  }
 }

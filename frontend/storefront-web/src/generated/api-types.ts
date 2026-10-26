@@ -79,6 +79,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/batches/{batch_no}/customs-export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description F-16 报关清单导出（CSV，UTF-8 BOM）：批次逐码申报明细（25号§一.5）。
+         *
+         *     工作流=报关前贴码并在报关单申报（2026-12-01 起），清单供报关申报与贴码
+         *     核对——导出批次**全部码**（不筛状态，状态列供核对）。零依赖 CSV（无 xlsx
+         *     库），BOM 使 Excel 直开。
+         */
+        get: operations["api_v1_batches_customs_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/batches/{batch_no}/print-list/": {
         parameters: {
             query?: never;
@@ -1437,6 +1460,26 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["CodeListInRequest"];
             };
         };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_batches_customs_export_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_no: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No response body */
             200: {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 import { errCode, getData, postData } from "@/lib/api";
+import { getToken } from "@/lib/token";
 
 interface Batch {
   batch_id: string;
@@ -34,6 +35,24 @@ export default function CodesPage() {
     queryFn: () => getData<{ data: { batch_no: string; in_stock: number; age_days: number; aging_bucket: string }[] }>("/codes/aging/"),
   });
 
+  const downloadCustoms = async (batchNo: string) => {
+    setError(null);
+    try {
+      const resp = await fetch(`/api/v1/batches/${batchNo}/customs-export/`, {
+        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+      });
+      if (!resp.ok) throw new Error(String(resp.status));
+      const blob = await resp.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `customs-${batchNo}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      setError(t("errors.generic"));
+    }
+  };
+
   const run = async (fn: () => Promise<unknown>, okMsg?: string) => {
     setError(null);
     setOk(null);
@@ -62,6 +81,7 @@ export default function CodesPage() {
                 <th>{t("codes.customs")}</th>
                 <th>{t("codes.codes")}</th>
                 <th>{t("codes.state")}</th>
+                <th>{t("codes.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -71,6 +91,11 @@ export default function CodesPage() {
                   <td>{b.customs_declaration || "—"}</td>
                   <td>{b.code_count ?? 0}</td>
                   <td>{b.status}</td>
+                  <td>
+                    <button className="btn small" onClick={() => void downloadCustoms(b.batch_no)}>
+                      {t("codes.customsExport")}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

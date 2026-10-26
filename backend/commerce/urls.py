@@ -41,6 +41,7 @@ admin_patterns = [
     path("batches/list/", views_codes.batch_list),
     path("batches/<str:batch_no>/codes/", views_codes.import_codes),
     path("batches/<str:batch_no>/print-list/", views_codes.print_list),
+    path("batches/<str:batch_no>/customs-export/", views_codes.customs_export),
     path("batches/<str:batch_no>/receive/", views_codes.receive_batch),
     path("codes/outbound/", views_codes.outbound_codes),
     path("codes/return/", views_codes.return_codes),

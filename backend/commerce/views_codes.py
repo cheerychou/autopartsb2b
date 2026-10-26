@@ -3,6 +3,10 @@
 RBAC（fail-closed 默认）：赋码/库存写权限档位 require_permission。
 """
 
+import csv
+import io
+
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
@@ -130,6 +134,51 @@ def print_list(request, batch_no: str):
             "meta": {"count": codes.count(), "batch": batch.batch_no},
         }
     )
+
+
+@extend_schema(responses=None)
+@api_view(["GET"])
+@require_permission("inventory:read")
+def customs_export(request, batch_no: str):
+    """F-16 报关清单导出（CSV，UTF-8 BOM）：批次逐码申报明细（25号§一.5）。
+
+    工作流=报关前贴码并在报关单申报（2026-12-01 起），清单供报关申报与贴码
+    核对——导出批次**全部码**（不筛状态，状态列供核对）。零依赖 CSV（无 xlsx
+    库），BOM 使 Excel 直开。
+    """
+    batch = get_object_or_404(ImportBatch, batch_no=batch_no)
+    codes = batch.codes.select_related("product").order_by("product__product_code", "code_value")
+    buf = io.StringIO()
+    buf.write("\ufeff")  # UTF-8 BOM：Excel 识别编码
+    w = csv.writer(buf)
+    w.writerow(
+        [
+            "批次号",
+            "报关单号",
+            "商品编码",
+            "品名(ru)",
+            "ТН ВЭД",
+            "GTIN",
+            "DataMatrix 码值",
+            "码状态",
+        ]
+    )
+    for c in codes:
+        w.writerow(
+            [
+                batch.batch_no,
+                batch.customs_declaration,
+                c.product.product_code,
+                c.product.title_ru,
+                c.product.harmonized_code,
+                c.gtin or c.product.gtin,
+                c.code_value,
+                c.get_state_display(),
+            ]
+        )
+    resp = HttpResponse(buf.getvalue(), content_type="text/csv; charset=utf-8")
+    resp["Content-Disposition"] = f'attachment; filename="customs-{batch_no}.csv"'
+    return resp
 
 
 class ReceiveSerializer(serializers.Serializer):

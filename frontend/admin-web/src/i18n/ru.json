@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Админ-панель" },
+  "app": {
+    "title": "Админ-панель"
+  },
   "nav": {
     "products": "Товары",
     "inventory": "Склад",
@@ -9,7 +11,12 @@
     "reports": "Отчёты",
     "logout": "Выйти"
   },
-  "auth": { "login": "Войти", "username": "Логин", "password": "Пароль", "notAdmin": "Доступ только для администраторов" },
+  "auth": {
+    "login": "Войти",
+    "username": "Логин",
+    "password": "Пароль",
+    "notAdmin": "Доступ только для администраторов"
+  },
   "common": {
     "loading": "Загрузка…",
     "save": "Сохранить",
@@ -35,7 +42,12 @@
     "offShelf": "Снять",
     "onShelf": "Выставить",
     "deactivateExpired": "Снять товары с истёкшей ценой",
-    "picker": { "oe": "OE-номер", "keyword": "Ключевое слово", "search": "Найти", "select": "Выбрать как SKU" }
+    "picker": {
+      "oe": "OE-номер",
+      "keyword": "Ключевое слово",
+      "search": "Найти",
+      "select": "Выбрать как SKU"
+    }
   },
   "inventory": {
     "title": "Склад (F-12)",
@@ -92,9 +104,17 @@
     "codeValues": "Коды (по одному в строке)",
     "productId": "ID товара",
     "gtin": "GTIN",
-    "state": "Статус"
+    "state": "Статус",
+    "actions": "Действия",
+    "customsExport": "Таможенный реестр"
   },
-  "reports": { "title": "Отчёты (F-17)", "sales": "Продажи", "slowMovers": "Неликвид", "coverage": "Покрытие каталога", "aging": "Возраст кодов" },
+  "reports": {
+    "title": "Отчёты (F-17)",
+    "sales": "Продажи",
+    "slowMovers": "Неликвид",
+    "coverage": "Покрытие каталога",
+    "aging": "Возраст кодов"
+  },
   "status": {
     "pending_payment": "Ожидает оплаты",
     "awaiting_confirmation": "Ожидает подтверждения",
@@ -103,6 +123,13 @@
     "completed": "Завершён",
     "cancelled": "Отменён"
   },
-  "verify": { "pending": "На проверке", "approved": "Одобрен", "rejected": "Отклонён" },
-  "errors": { "generic": "Ошибка операции", "forbidden": "Нет прав" }
+  "verify": {
+    "pending": "На проверке",
+    "approved": "Одобрен",
+    "rejected": "Отклонён"
+  },
+  "errors": {
+    "generic": "Ошибка операции",
+    "forbidden": "Нет прав"
+  }
 }

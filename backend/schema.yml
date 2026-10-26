@@ -110,6 +110,28 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/batches/{batch_no}/customs-export/:
+    get:
+      operationId: api_v1_batches_customs_export_retrieve
+      description: |-
+        F-16 报关清单导出（CSV，UTF-8 BOM）：批次逐码申报明细（25号§一.5）。
+
+        工作流=报关前贴码并在报关单申报（2026-12-01 起），清单供报关申报与贴码
+        核对——导出批次**全部码**（不筛状态，状态列供核对）。零依赖 CSV（无 xlsx
+        库），BOM 使 Excel 直开。
+      parameters:
+      - in: path
+        name: batch_no
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/batches/{batch_no}/print-list/:
     get:
       operationId: api_v1_batches_print_list_retrieve
