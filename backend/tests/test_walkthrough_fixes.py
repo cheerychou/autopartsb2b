@@ -75,14 +75,14 @@ def _product(price=500.00, *, code_suffix: str = "", harmonized_code: str = "870
     )
     n = counter["n"]
     brand = Brand.objects.create(
-        brand_code=f"BWA{n}{code_suffix}",
+        brand_code=f"BW{n}{code_suffix}",
         brand_name="走查品牌",
         brand_type="S",
         brand_level="brand",
         brand_status="active",
     )
     spu = SPU.objects.create(
-        spu_code=f"SPUWA{n}{code_suffix}",
+        spu_code=f"SPW{n}{code_suffix}",
         spu_name="Тормозной диск",
         brand_id=brand,
         product_type="part",
@@ -402,7 +402,7 @@ def test_admin_token_rejects_buyer_account():
 def test_admin_token_ok_and_orders_list():
     """staff 走管理端 token 登录成功；订单列表可查（分页 results 含既有订单）。"""
     _admin_with_role("staff")  # 建 staff 组用户（用户名按角色计数规则取回）
-    product = _product(code_suffix="adm")
+    product = _product(code_suffix="a")
     _, order = _awaiting_order(product)
     api = APIClient()
     staff_user = User.objects.filter(groups__name="staff").first()
@@ -422,7 +422,7 @@ def test_admin_token_ok_and_orders_list():
 
 def test_cart_remove():
     """购物车移除行（F-06 补齐；此前只能增改不能删）。"""
-    product = _product(code_suffix="rm")
+    product = _product(code_suffix="m")
     buyer = _buyer_individual("wacartbuyer")
     buyer.post(
         "/storefront/v1/cart/add",

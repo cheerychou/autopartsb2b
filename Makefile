@@ -1,6 +1,6 @@
 # B1-RU 开发管理 Makefile（承 CDD3 命令体系模式）
 
-.PHONY: help dev dev-backend dev-frontend migrate makemigrations test test-backend test-frontend
+.PHONY: help dev dev-backend dev-frontend migrate makemigrations test test-backend test-backend-pg test-frontend
 .PHONY: lint lint-backend lint-frontend type-check schema pre-check install install-backend install-frontend
 
 .DEFAULT_GOAL := help
@@ -29,8 +29,10 @@ migrate: ## 执行迁移（只向前兼容）
 	cd $(BACKEND_DIR) && ./venv/bin/python manage.py migrate
 
 test: test-backend test-frontend ## 全量测试
-test-backend: ## 后端 pytest（封闭 SQLite；PG 集成测试随 S1 接入）
+test-backend: ## 后端 pytest（封闭 SQLite；PG 档另跑 test-backend-pg）
 	cd $(BACKEND_DIR) && B1RU_TEST_SQLITE=1 B1RU_AUTH_THROTTLE_RATE=10000/min ./venv/bin/pytest
+test-backend-pg: ## PG 真库测试档（并发行锁等仅 PG 有真语义；本机 PG 起 dev compose db 或 brew 实例于 5433）
+	cd $(BACKEND_DIR) && B1RU_AUTH_THROTTLE_RATE=10000/min ./venv/bin/pytest
 test-frontend: ## 前端两应用测试
 	cd $(FRONTEND_DIR) && pnpm -r test:run
 
