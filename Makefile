@@ -11,8 +11,9 @@ help: ## 显示帮助
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 install: install-backend install-frontend ## 安装全部依赖
-install-backend: ## 后端依赖（venv）
-	cd $(BACKEND_DIR) && python3.13 -m venv venv && ./venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+install-backend: ## 后端依赖（venv + pre-commit hook）
+	cd $(BACKEND_DIR) && python3.13 -m venv venv && ./venv/bin/pip install -r requirements.txt -r requirements-dev.txt pre-commit
+	cd $(BACKEND_DIR) && ./venv/bin/pre-commit install
 install-frontend: ## 前端依赖
 	cd $(FRONTEND_DIR) && pnpm install
 

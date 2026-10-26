@@ -26,6 +26,9 @@ updated_at: 2026-10-25
 | [KNW-B1-EXP-009](KNW-B1-EXP-009-sqlite-test-blind-spots-pg-tier.md) | SQLite 档盲区（varchar 长度零校验/行锁零验证）与 PG 真库测试档（make test-backend-pg + 双线程竞态模式） | 改动涉行锁/varchar 边界/事务回滚；DoD 2 验收前；遇"SQLite 全绿但真库 DataError"时 |
 | [KNW-B1-EXP-010](KNW-B1-EXP-010-dod1-offline-verification.md) | DoD 1 断网自足验证（L1 静态审计 + internal 网络 drill）与演示脚本硬断言纪律（bash 无断言掩盖 ship 响应契约 bug） | DoD 1 验收；交付单元构建遇 registry 不可达/端口映射不生效；写验收脚本前 |
 | [KNW-B1-EXP-011](KNW-B1-EXP-011-ui-walkthrough-findings.md) | UI 走查三连发现（BrowserRouter 漏包整树崩/i18next 单花括号/brand 回退链断）与 headless 走查方法 | 前端页面 build 过但运行不对；写 i18n 占位符；动 SPU/brand 名展示 |
+| [KNW-B1-EXP-012](KNW-B1-EXP-012-shell-command-traps.md) | shell/命令行陷阱集（set -e 不保护 && 列表/全角字符并入变量名/cwd 错位四连） | 写 bash 编排脚本；脚本带病继续/unbound variable/路径反复找不到时 |
+| [KNW-B1-EXP-013](KNW-B1-EXP-013-checker-selfheal-design.md) | 检测器/自愈器设计语义（比对基准选错致误报/checkout 还原撤销修复/工作区状态纪律） | 写 drift/一致性检查类目标；检测器永远红或误报；用 git checkout 还原文件前 |
+| [KNW-B1-EXP-014](KNW-B1-EXP-014-precommit-format-i18n.md) | 提交前自检顺序（pre-commit hook 未装格式化两轮红/t() fallback 硬编码/集成脚本先读既有断言） | 新环境首次提交前；写 i18n 与组件；写集成/验收脚本对响应做假设时 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 
