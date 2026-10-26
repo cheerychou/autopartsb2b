@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from catalog.services.query import catalog_version
-from commerce import services, services_fulfillment, services_pricing
+from commerce import services, services_fulfillment, services_pricing, services_reporting
 from commerce.models_customer import BuyerAccount
 from commerce.models_order import Order, OrderItem
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
@@ -363,6 +363,28 @@ def confirm_payment(request, order_id):
     except ValueError as e:
         return Response({"error": {"code": "400", "message": str(e)}}, status=400)
     return Response({"data": {"order_no": order.order_no, "status": order.status}})
+
+
+class PaymentFlowQuerySerializer(serializers.Serializer):
+    date_from = serializers.DateField(required=False)
+    date_to = serializers.DateField(required=False)
+
+
+@extend_schema(parameters=[PaymentFlowQuerySerializer()])
+@api_view(["GET"])
+@require_permission("payments:read")
+def payment_list(request):
+    """F-14 收单流水列表（ENG-003 缺口①）：已核销订单的到账记录派生视图。"""
+    s = PaymentFlowQuerySerializer(data=request.query_params)
+    s.is_valid(raise_exception=True)
+    return Response(
+        {
+            "data": services_reporting.payment_flows(
+                date_from=s.validated_data.get("date_from"),
+                date_to=s.validated_data.get("date_to"),
+            )
+        }
+    )
 
 
 class ShipSerializer(serializers.Serializer):

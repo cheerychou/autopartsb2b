@@ -182,14 +182,18 @@ def oe_variants(raw: str) -> list[str]:
     return [v for v in variants if v]
 
 
-def search_oe(raw: str, *, verified_only: bool = True):
-    """OE 检索（29号 I1-6）：精确 OE + 交叉号命中两组。"""
+def search_oe(raw: str):
+    """OE 检索（29号 I1-6）：精确 OE + 交叉号命中两组。
+
+    verified 门控不适用于 SPU 直查——verified_status 在 SPUFitment/SPUSKUMapping
+    行层，SPU 实体本身无此语义；适配行的可见性由 fitments 查询门控（29号§六）。
+    （S0-S5 评审遗留「search_oe 门控」据此收口：原签名的 verified_only 形参
+    为空转分支，已删除。）
+    """
     variants = oe_variants(raw)
     direct = SPU.objects.filter(oe_number__in=variants, spu_status="active").select_related(
         "brand_id"
     )
-    if verified_only:
-        pass  # SPU 层无 verified_status（在 SPUFitment/SPUSKUMapping 层），直查不过门控
     # 交叉号双向语义：互换任一侧 OE 命中，返回对侧 SPU（TWO_WAY/OE_TO_AFTERMARK 通用）
     hits = SPUInterchange.objects.filter(
         models.Q(target_spu__oe_number__in=variants) | models.Q(source_spu__oe_number__in=variants)

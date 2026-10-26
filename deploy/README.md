@@ -35,6 +35,24 @@ gunicorn。任何一步失败即退出，`docker compose logs backend` 排查。
 - [ ] 到期下价调度：安装 `scheduler/`（systemd timer 或 cron，见 scheduler/README.md）
 - [ ] 商城/管理端静态产物部署 + 反代 `/api/`、`/catalog/`、`/storefront/` → 后端 :8000
 
+### 账号管理（首次部署开号 + 日常增删，缺口⑥流程）
+
+角色单一真相源：`shared/permissions.py`（owner/staff/finance/data_steward 四角色，`init_rbac` 无参运行可打印权限概览）。
+
+```bash
+# 1) 日常业务账号不建 superuser——用 Django admin 建普通用户：
+#    超管登录 http://<host>/admin/ → 用户 → 增加用户（用户名+密码）
+# 2) 分配角色（--assign 用户名:角色，可重复）：
+docker compose exec backend python manage.py init_rbac \
+  --assign ivanov:staff --assign petrova:finance --assign sidorov:data_steward
+# 3) 改密：/admin/ 用户页「修改密码」，或命令行：
+docker compose exec backend python manage.py changepassword ivanov
+# 4) 停用离职账号：/admin/ 用户页取消「活跃」勾选（不禁用亦可登录）
+```
+
+- `owner` 由部署时 entrypoint 自动建的超管兼任（或按上法建普通 owner 账号日常用，超管仅我方运维兜底）；
+- 角色与权限码映射不可在界面改（代码常量单一真相源）；角色越权由后端 403 兜底（admin-web 侧栏当前不按角色显隐，v1 团队规模小，后端权限层为准）。
+
 ## 4. 升级与备份
 
 - **升级**：换镜像 `docker compose up -d`（迁移自动执行、只向前）；目录数据升级=导入新版本包（幂等、schema 窗口校验，27号§六）

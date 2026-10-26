@@ -15,6 +15,19 @@ from catalog.models_staging import FeedExportLog, StagedFitment
 pytestmark = pytest.mark.django_db
 
 
+def _api_with_role(role: str):
+    from django.contrib.auth.models import Group
+    from django.core.management import call_command
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    call_command("init_rbac")
+    u = User.objects.create_user(username=f"rep_{role}", password="x")
+    u.groups.add(Group.objects.get(name=role))
+    api = APIClient()
+    api.credentials(HTTP_AUTHORIZATION=f"Bearer {str(RefreshToken.for_user(u).access_token)}")
+    return api
+
+
 @pytest.fixture
 def steward_api():
     from django.core.management import call_command
@@ -105,7 +118,14 @@ def test_staging_create_and_export_feed(steward_api, fitment_seed):
 
 
 def test_reports_endpoint(steward_api, fitment_seed):
-    api, _ = steward_api
+    """F-17 报表：数据断言走 finance（reports:read——ENG-003 ⑦b 拍板 owner+finance）。
+
+    P0 权限修复（2026-10-26）后 data_steward 应被拒 403——旧断言 200 是
+    函数视图权限失效期的行为快照，此处一并锁死正确矩阵。
+    """
+    finance_api = _api_with_role("finance")
+    assert steward_api[0].get("/api/v1/reports/catalog-coverage/").status_code == 403
+    api = finance_api
     cat = Category.objects.create(
         category_code="RPT",
         category_name="报表类目",

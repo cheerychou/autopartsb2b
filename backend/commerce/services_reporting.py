@@ -3,6 +3,8 @@
 码账龄委托 services_codes.aging_report；其余三项在此聚合（只读，无副作用）。
 """
 
+from decimal import Decimal
+
 from django.db.models import Count, Sum
 
 from commerce.models_order import Order, OrderItem
@@ -59,3 +61,35 @@ def catalog_coverage() -> dict:
         "leaf_covered": covered,
         "ratio": round(covered / leaf_total, 4) if leaf_total else 0.0,
     }
+
+
+def payment_flows(date_from=None, date_to=None) -> dict:
+    """F-14 收单流水（ENG-003 缺口①）：从已核销订单派生（v1 无独立支付流水表）。
+
+    一行 = 一笔到账核销；金额恒等于订单总额（confirm_payment 金额一致校验保证）。
+    date_from/date_to 按核销日过滤；按核销时间倒序。
+    """
+    qs = Order.objects.filter(payment_confirmed_at__isnull=False).select_related(
+        "account__user", "payment_confirmed_by"
+    )
+    if date_from:
+        qs = qs.filter(payment_confirmed_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(payment_confirmed_at__date__lte=date_to)
+    rows = [
+        {
+            "order_no": o.order_no,
+            "buyer": o.account.user.username,
+            "company_name_ru": o.account.company_name_ru,
+            "payment_method": o.payment_method,
+            "amount": str(o.total_amount),
+            "confirmed_at": o.payment_confirmed_at.isoformat(),
+            "confirmed_by": o.payment_confirmed_by.username if o.payment_confirmed_by else "",
+            "note": o.payment_note,
+            "order_status": o.status,
+        }
+        for o in qs.order_by("-payment_confirmed_at")
+    ]
+    total = qs.aggregate(total=Sum("total_amount"))["total"]
+    amount = (total or Decimal("0")).quantize(Decimal("0.01"))
+    return {"rows": rows, "count": len(rows), "total_amount": str(amount)}

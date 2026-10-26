@@ -594,6 +594,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderAdmin'
           description: ''
+  /api/v1/payments/:
+    get:
+      operationId: api_v1_payments_retrieve
+      description: F-14 收单流水列表（ENG-003 缺口①）：已核销订单的到账记录派生视图。
+      parameters:
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/pricing/deactivate-expired/:
     post:
       operationId: api_v1_pricing_deactivate_expired_create

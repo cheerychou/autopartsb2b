@@ -395,6 +395,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description F-14 收单流水列表（ENG-003 缺口①）：已核销订单的到账记录派生视图。 */
+        get: operations["api_v1_payments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pricing/deactivate-expired/": {
         parameters: {
             query?: never;
@@ -1912,6 +1929,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OrderAdmin"];
                 };
+            };
+        };
+    };
+    api_v1_payments_retrieve: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

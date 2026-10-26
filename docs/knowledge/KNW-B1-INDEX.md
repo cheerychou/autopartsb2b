@@ -29,6 +29,7 @@ updated_at: 2026-10-25
 | [KNW-B1-EXP-012](KNW-B1-EXP-012-shell-command-traps.md) | shell/命令行陷阱集（set -e 不保护 && 列表/全角字符并入变量名/cwd 错位四连） | 写 bash 编排脚本；脚本带病继续/unbound variable/路径反复找不到时 |
 | [KNW-B1-EXP-013](KNW-B1-EXP-013-checker-selfheal-design.md) | 检测器/自愈器设计语义（比对基准选错致误报/checkout 还原撤销修复/工作区状态纪律） | 写 drift/一致性检查类目标；检测器永远红或误报；用 git checkout 还原文件前 |
 | [KNW-B1-EXP-014](KNW-B1-EXP-014-precommit-format-i18n.md) | 提交前自检顺序（pre-commit hook 未装格式化两轮红/t() fallback 硬编码/集成脚本先读既有断言） | 新环境首次提交前；写 i18n 与组件；写集成/验收脚本对响应做假设时 |
+| [KNW-B1-EXP-015](KNW-B1-EXP-015-drf-apiview-attr-whitelist-permission-gap.md) | DRF api_view 属性白名单吞 ACTION_PERMISSIONS（函数视图角色判定整体失效 P0）+「无 403 断言」测试盲区 | 写 @require_permission 函数视图；核对权限矩阵；新增权限码/端点设计守卫测试时 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 

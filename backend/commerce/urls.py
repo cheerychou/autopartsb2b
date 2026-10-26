@@ -46,6 +46,8 @@ admin_patterns = [
     path("codes/outbound/", views_codes.outbound_codes),
     path("codes/return/", views_codes.return_codes),
     path("codes/aging/", views_codes.codes_aging),
+    # F-14 收单流水（ENG-003 缺口①）
+    path("payments/", views.payment_list),
     # F-17 报表
     path("reports/sales/", views_codes.report_sales),
     path("reports/slow-movers/", views_codes.report_slow_movers),

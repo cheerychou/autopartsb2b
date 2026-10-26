@@ -23,6 +23,7 @@ export default function Layout() {
               ["/products", t("nav.products")],
               ["/inventory", t("nav.inventory")],
               ["/orders", t("nav.orders")],
+              ["/payments", t("nav.payments")],
               ["/buyers", t("nav.buyers")],
               ["/codes", t("nav.codes")],
               ["/reports", t("nav.reports")],

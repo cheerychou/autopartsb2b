@@ -6,6 +6,7 @@
     "products": "商品管理",
     "inventory": "库存",
     "orders": "订单履约",
+    "payments": "收单流水",
     "buyers": "客户审核",
     "codes": "赋码工作台",
     "reports": "报表",
@@ -107,6 +108,23 @@
     "state": "状态",
     "actions": "操作",
     "customsExport": "报关清单"
+  },
+  "payments": {
+    "title": "收单流水（F-14）",
+    "dateFrom": "起始日期",
+    "dateTo": "截止日期",
+    "count": "笔数",
+    "total": "合计到账",
+    "time": "核销时间",
+    "order": "订单号",
+    "buyer": "买家",
+    "method": "收款方式",
+    "amount": "金额",
+    "by": "核销人",
+    "note": "备注",
+    "method_bank_transfer": "对公转账",
+    "method_online": "在线收单",
+    "empty": "暂无核销记录"
   },
   "reports": {
     "title": "报表（F-17）",

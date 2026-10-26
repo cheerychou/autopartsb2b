@@ -1,4 +1,6 @@
 import { Route, Routes, Navigate } from "react-router-dom";
+
+import PaymentsPage from "@/pages/PaymentsPage";
 import { useEffect } from "react";
 
 import Layout from "@/components/Layout";
@@ -23,6 +25,7 @@ export default function App() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/buyers" element={<BuyersPage />} />
         <Route path="/codes" element={<CodesPage />} />
         <Route path="/reports" element={<ReportsPage />} />

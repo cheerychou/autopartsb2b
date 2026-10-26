@@ -88,7 +88,7 @@ class RoleBasedPermission(BasePermission):
             return False
         if not has_any_admin_role(request.user):
             return False  # 买家/无关账号：拒绝（评审 P0-1 回归点）
-        required = _required_code(view)
+        required = _required_code(view) or getattr(self, "b1_required_code", None)
         if required is None:
             return True
         return has_permission(request.user, required)
@@ -103,15 +103,22 @@ def _required_code(view) -> str | None:
 
 
 def require_permission(code: str):
-    """管理端函数视图权限声明（用法：@require_permission 置于 @api_view **之下**——
-    DRF 官方机制：此处设置的 ACTION_PERMISSIONS/permission_classes 会被 api_view
-    拷贝进 WrappedAPIView 视图类，RoleBasedPermission 据此判定）。
-    禁止裸 @api_view 声明业务端点（评审 P0-1）。"""
+    """管理端函数视图权限声明（用法：@require_permission 置于 @api_view **之下**）。
+
+    权限码烧进 permission 子类（b1_required_code）——不依赖视图属性传递：
+    DRF api_view 只拷贝固定五属性（renderer/parser/auth/throttle/permission_classes），
+    ACTION_PERMISSIONS 从未到达函数视图（P0 修复 2026-10-26：此前函数视图仅有
+    认证门槛，角色码判定形同虚设；ViewSet 类属性路径不受影响，仍走 ACTION_PERMISSIONS）。
+    禁止裸 @api_view 声明业务端点（评审 P0-1）。
+    """
     from rest_framework.decorators import permission_classes as drf_permission_classes
 
+    class RequiredPermission(RoleBasedPermission):
+        b1_required_code = code
+
     def deco(view):
-        view.ACTION_PERMISSIONS = {"__view__": code}
-        return drf_permission_classes([RoleBasedPermission])(view)
+        view.ACTION_PERMISSIONS = {"__view__": code}  # 保留：schema/审计可见
+        return drf_permission_classes([RequiredPermission])(view)
 
     return deco
 
