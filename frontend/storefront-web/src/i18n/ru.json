@@ -29,7 +29,7 @@
     "corporateRejected": "К сожалению, компания не прошла проверку.",
     "priceLoginRequired": "Войдите, чтобы увидеть цены",
     "loginRequired": "Войдите, чтобы продолжить",
-    "welcome": "Добро пожаловать, {name}!"
+    "welcome": "Добро пожаловать, {{name}}!"
   },
   "home": {
     "oePlaceholder": "Введите артикул (OE)",
@@ -59,7 +59,7 @@
     "oe": "Артикул",
     "brand": "Бренд",
     "gtin": "GTIN",
-    "inStock": "В наличии: {n} шт.",
+    "inStock": "В наличии: {{n}} шт.",
     "outOfStock": "Нет в наличии",
     "addToCart": "В корзину",
     "quantity": "Количество",
@@ -118,7 +118,7 @@
     "INVALID_CREDENTIALS": "Неверные учётные данные",
     "NOT_FOUND": "Не найдено",
     "ORDER_NOT_FOUND": "Заказ не найден",
-    "generic": "Ошибка: {code}"
+    "generic": "Ошибка: {{code}}"
   },
   "common": {
     "loading": "Загрузка…",

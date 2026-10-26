@@ -29,7 +29,7 @@
     "corporateRejected": "很遗憾，企业认证未通过。",
     "priceLoginRequired": "登录后查看价格",
     "loginRequired": "请先登录",
-    "welcome": "欢迎，{name}！"
+    "welcome": "欢迎，{{name}}！"
   },
   "home": {
     "oePlaceholder": "输入 OE 号 / 货号",
@@ -59,7 +59,7 @@
     "oe": "货号",
     "brand": "品牌",
     "gtin": "GTIN",
-    "inStock": "库存：{n} 件",
+    "inStock": "库存：{{n}} 件",
     "outOfStock": "无货",
     "addToCart": "加入购物车",
     "quantity": "数量",
@@ -118,7 +118,7 @@
     "INVALID_CREDENTIALS": "用户名或密码错误",
     "NOT_FOUND": "未找到",
     "ORDER_NOT_FOUND": "订单不存在",
-    "generic": "操作失败：{code}"
+    "generic": "操作失败：{{code}}"
   },
   "common": {
     "loading": "加载中…",

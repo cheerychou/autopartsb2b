@@ -25,6 +25,7 @@ updated_at: 2026-10-25
 | [KNW-B1-EXP-008](KNW-B1-EXP-008-drf-override-settings-snapshot-poison.md) | 测试内 override_settings(REST_FRAMEWORK) 毒化 DRF import 期类快照（认证/限流整进程报废） | 写 DRF 限流/认证测试；遇"单测过全量挂、失败点漂移"的认证/限流报错时 |
 | [KNW-B1-EXP-009](KNW-B1-EXP-009-sqlite-test-blind-spots-pg-tier.md) | SQLite 档盲区（varchar 长度零校验/行锁零验证）与 PG 真库测试档（make test-backend-pg + 双线程竞态模式） | 改动涉行锁/varchar 边界/事务回滚；DoD 2 验收前；遇"SQLite 全绿但真库 DataError"时 |
 | [KNW-B1-EXP-010](KNW-B1-EXP-010-dod1-offline-verification.md) | DoD 1 断网自足验证（L1 静态审计 + internal 网络 drill）与演示脚本硬断言纪律（bash 无断言掩盖 ship 响应契约 bug） | DoD 1 验收；交付单元构建遇 registry 不可达/端口映射不生效；写验收脚本前 |
+| [KNW-B1-EXP-011](KNW-B1-EXP-011-ui-walkthrough-findings.md) | UI 走查三连发现（BrowserRouter 漏包整树崩/i18next 单花括号/brand 回退链断）与 headless 走查方法 | 前端页面 build 过但运行不对；写 i18n 占位符；动 SPU/brand 名展示 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 

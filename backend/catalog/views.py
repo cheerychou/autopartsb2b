@@ -126,7 +126,14 @@ class SpuCard(NameChainMixin, serializers.ModelSerializer):
         return Q.resolve_name(obj, zh_field="spu_name", en_field="spu_name_en")
 
     def get_brand(self, obj):
-        return {"brand_id": str(obj.brand_id_id), "display_name": obj.brand_id.brand_name}
+        # brand 名走回退链（ru→en→zh）——UI 走查发现：原直取 brand_name 源名，
+        # entity_names 里 brand 的 ru 名（如 «Чери»）不生效，俄语页显示中文「奇瑞」
+        return {
+            "brand_id": str(obj.brand_id_id),
+            "display_name": Q.resolve_name(
+                obj.brand_id, zh_field="brand_name", en_field="brand_name_en"
+            ),
+        }
 
 
 def _can_see_unverified(request) -> bool:

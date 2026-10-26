@@ -81,6 +81,12 @@ def attach_entity_names(entity_type: str, objs) -> list:
     objs = list(objs)
     if not objs:
         return objs
+    if entity_type == "spu":
+        # SPU 卡片的 brand.display_name 同走回退链——brand 实例已随 select_related
+        # 在内存（零额外查询），递归批量挂行（单次 IN 查询，仍防 N+1）
+        brands = {o.brand_id for o in objs if getattr(o, "brand_id_id", None)}
+        if brands:
+            attach_entity_names("brand", list(brands))
     ids = {str(o.pk) for o in objs}
     rows = EntityName.objects.filter(
         status="active", entity_type=entity_type, entity_id__in=ids, market__in=["ru", "GLOBAL"]
