@@ -53,10 +53,10 @@ def _buyer_meta(request, buyer: Buyer, total=None):
 class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(min_length=4, max_length=150)
     password = serializers.CharField(min_length=8, write_only=True)
-    phone = serializers.CharField(default="", max_length=20)
+    phone = serializers.CharField(default="", allow_blank=True, max_length=20)
     buyer_type = serializers.ChoiceField(choices=BuyerAccount.BuyerType.choices)
-    company_name_ru = serializers.CharField(default="", max_length=300)
-    inn = serializers.CharField(default="", max_length=12)
+    company_name_ru = serializers.CharField(default="", allow_blank=True, max_length=300)
+    inn = serializers.CharField(default="", allow_blank=True, max_length=12)
 
     def validate(self, attrs):
         if attrs["buyer_type"] == BuyerAccount.BuyerType.CORPORATE and not attrs["inn"]:
@@ -436,6 +436,8 @@ def my_order_detail(request, order_id: uuid.UUID):
     return Response(
         {
             "data": {
+                # created_at：列表行有而详情漏——前端 created_at.slice 崩整树（e2e 实证）
+                "created_at": order.created_at.isoformat(),
                 "order_no": order.order_no,
                 "status": order.status,
                 "total_amount": str(order.total_amount),

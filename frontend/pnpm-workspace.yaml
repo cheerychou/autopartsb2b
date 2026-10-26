@@ -2,3 +2,4 @@ packages:
   - "storefront-web"
   - "admin-web"
   - "packages/*"
+  - "e2e"

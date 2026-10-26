@@ -185,7 +185,7 @@ class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
     class TxInSerializer(serializers.Serializer):
         tx_type = serializers.ChoiceField(choices=InventoryTransaction.TxType.choices)
         quantity = serializers.IntegerField()
-        note = serializers.CharField(default="", max_length=200)
+        note = serializers.CharField(default="", allow_blank=True, max_length=200)
 
     @extend_schema(request=TxInSerializer)
     @action(methods=["post"], detail=True, url_path="transactions")
@@ -289,7 +289,9 @@ class BuyerAccountViewSet(viewsets.ReadOnlyModelViewSet):
     }
 
     class DecisionSerializer(serializers.Serializer):
-        note = serializers.CharField(default="", max_length=200)
+        # allow_blank：approve 允许空意见（前端显式传 ""——default 只兜字段缺失）；
+        # reject 必填在视图层显式校验
+        note = serializers.CharField(default="", allow_blank=True, max_length=200)
 
     @extend_schema(request=DecisionSerializer)
     @action(methods=["post"], detail=True)
@@ -333,7 +335,7 @@ def deactivate_expired_prices(request):
 
 class ConfirmPaymentSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
-    note = serializers.CharField(default="", max_length=200)
+    note = serializers.CharField(default="", allow_blank=True, max_length=200)
 
 
 @extend_schema(request=ConfirmPaymentSerializer)
@@ -365,7 +367,7 @@ def confirm_payment(request, order_id):
 
 class ShipSerializer(serializers.Serializer):
     tracking_no = serializers.CharField(max_length=64)
-    carrier = serializers.CharField(default="", max_length=32)
+    carrier = serializers.CharField(default="", allow_blank=True, max_length=32)
 
 
 @extend_schema(request=ShipSerializer)

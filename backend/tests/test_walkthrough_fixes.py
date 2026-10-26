@@ -476,3 +476,20 @@ def test_ship_response_contract():
     assert r2.status_code == 200, r2.content
     assert r2.json()["data"]["status"] == "shipped"  # 修复点：原恒 paid（旧对象）
     assert r2.json()["data"]["tracking_no"] == "CDEK-CONTRACT"  # 修复点：原恒空
+
+
+def test_order_detail_contract_fields():
+    """订单详情响应含 created_at（e2e 实证缺口：列表有详情无，前端 slice 崩整树）。"""
+    product = _product(code_suffix="d")
+    buyer, order = _awaiting_order(product)
+    api = _admin_with_role("owner")
+    api.post(
+        f"/api/v1/orders/{order.order_id}/confirm-payment/",
+        {"amount": str(order.total_amount), "note": ""},
+        format="json",
+    )
+    r = buyer.get(f"/storefront/v1/orders/{order.order_id}")
+    assert r.status_code == 200, r.content
+    d = r.json()["data"]
+    for key in ("order_no", "status", "total_amount", "created_at", "items", "tracking_no"):
+        assert key in d, f"详情缺字段 {key}"

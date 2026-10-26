@@ -13,7 +13,9 @@ interface AdminAuth {
 }
 
 export const useAdminAuth = create<AdminAuth>((set) => ({
-  loggedIn: false,
+  // 初始即读 token（e2e 走查发现：bootstrap 在 useEffect 里晚于守卫首渲染，
+  // 刷新任何页会被立即弹回 /login——恢复必须先于守卫首渲染）
+  loggedIn: Boolean(getToken()),
   username: "",
   bootstrap: () => {
     if (getToken()) set({ loggedIn: true });

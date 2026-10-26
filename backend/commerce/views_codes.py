@@ -27,7 +27,7 @@ class BatchSerializer(serializers.ModelSerializer):
 
 class BatchInSerializer(serializers.Serializer):
     batch_no = serializers.CharField(max_length=32)
-    customs_declaration = serializers.CharField(default="", max_length=64)
+    customs_declaration = serializers.CharField(default="", allow_blank=True, max_length=64)
 
 
 @extend_schema(request=BatchInSerializer)
@@ -68,7 +68,7 @@ def batch_list(request):
 
 class CodeListInSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
-    gtin = serializers.CharField(default="", max_length=14)
+    gtin = serializers.CharField(default="", allow_blank=True, max_length=14)
     code_values = serializers.ListField(
         child=serializers.CharField(max_length=200), allow_empty=False
     )

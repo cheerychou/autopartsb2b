@@ -1216,7 +1216,6 @@ components:
           maxLength: 32
         customs_declaration:
           type: string
-          minLength: 1
           default: ''
           maxLength: 64
       required:
@@ -1323,7 +1322,6 @@ components:
           format: uuid
         gtin:
           type: string
-          minLength: 1
           default: ''
           maxLength: 14
         code_values:
@@ -1344,7 +1342,6 @@ components:
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
         note:
           type: string
-          minLength: 1
           default: ''
           maxLength: 200
       required:
@@ -1354,7 +1351,6 @@ components:
       properties:
         note:
           type: string
-          minLength: 1
           default: ''
           maxLength: 200
     InventoryItem:
@@ -1861,19 +1857,16 @@ components:
           minLength: 8
         phone:
           type: string
-          minLength: 1
           default: ''
           maxLength: 20
         buyer_type:
           $ref: '#/components/schemas/BuyerTypeEnum'
         company_name_ru:
           type: string
-          minLength: 1
           default: ''
           maxLength: 300
         inn:
           type: string
-          minLength: 1
           default: ''
           maxLength: 12
       required:
@@ -1915,7 +1908,6 @@ components:
           maxLength: 64
         carrier:
           type: string
-          minLength: 1
           default: ''
           maxLength: 32
       required:
@@ -1988,7 +1980,6 @@ components:
           type: integer
         note:
           type: string
-          minLength: 1
           default: ''
           maxLength: 200
       required:
