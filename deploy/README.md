@@ -48,7 +48,29 @@ cd frontend && pnpm --filter storefront-web build && pnpm --filter admin-web bui
 # 产物在各 app dist/——静态托管；API 反代规则：/api,/catalog,/storefront → backend:8000
 ```
 
-## 6. 纪律提醒
+## 6. license 签发与续约（运营方/开发商侧操作，2026-10-26 闭环验证）
+
+机制（D3-A）：Ed25519 离线验签，**信息性四态**（valid/expired/missing/invalid）——任何状态
+不拦截功能，商业杠杆=总仓对到期客户停发新包（26号§八.4「不远程锁死」）。私钥在
+`~/.config/b1ru/license_private_key.pem`（勿入库勿入镜像）；公钥随代码分发。
+
+```bash
+# 首客签发 / 续约（同一命令，换 expires-at）：
+backend/venv/bin/python manage.py make_license \
+  --licensee "ООО Клиент" --instance-id inst-<客户标识> --tier standard \
+  --expires-at 2027-10-26 --private-key ~/.config/b1ru/license_private_key.pem \
+  --out license.json
+# 把 license.json 交付客户，放到部署环境 B1RU_LICENSE_FILE 指向的路径（缺省 backend/license.json）
+
+# 实例侧查看（信息性）：
+python manage.py license_status --refresh   # valid/expired/missing/invalid + days_left
+```
+
+- 结果缓存 24h（每日校验语义）；--refresh 强制重读；
+- 续约=换发新文件替换旧文件，替换后生效（无需重启；缓存到期或 --refresh 即读新）；
+- 篡改 payload 不重签 → invalid（字段清空）；全流程守卫：tests/test_license.py（9 例）。
+
+## 7. 纪律提醒
 
 - 新增任何常驻服务/外联属于**部署形态变更**，须委托方批准（铁律 3）
 - `b1ru.env` 不入库；镜像内已含静态产物，无需运行时 collectstatic
