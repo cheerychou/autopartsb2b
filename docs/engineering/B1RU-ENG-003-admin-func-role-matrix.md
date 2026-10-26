@@ -9,7 +9,7 @@ updated_at: 2026-10-26
 
 # B1RU-ENG-003 管理端功能×业务角色矩阵
 
-> 目的：管理端「功能全集 × 角色全集 × 界面载体」一张表，孵化期防遗漏。证据源：26号§4.2/§4.3（功能定义）、`shared/permissions.py` ROLE_PERMISSIONS（权限现状，✅ 已核实）、admin-web 路由（App.tsx，✅）、端点清单（urls.py，✅）。核对日期 2026-10-26 @ `cf03f9a`。
+> 目的：管理端「功能全集 × 角色全集 × 界面载体」一张表，孵化期防遗漏。证据源：26号§4.2/§4.3（功能定义）、`shared/permissions.py` ROLE_PERMISSIONS（权限现状，✅ 已核实）、admin-web 路由（App.tsx，✅）、端点清单（urls.py，✅）。核对日期 2026-10-26 @ `cf03f9a`。**缺口②⑦与 F-24 三问已于 2026-10-26 委托方拍板（全按推荐方案）。**
 
 ## 一、业务角色全集
 
@@ -30,12 +30,12 @@ updated_at: 2026-10-26
 |---|---|---|---|---|
 | F-10 商品管理 | admin-web `/products` | /api/v1/products（I2 选件器组 SKU+挂价+限时价） | owner·staff | ✅ |
 | F-11 限时价引擎 | 同上（价格+到期展示）+ deploy/scheduler 自动下价 | /pricing/deactivate-expired + /{id}/relist | owner·staff | ✅ |
-| F-12 库存 | admin-web `/inventory`（+流水页） | /inventory + /{id}/transactions | owner·staff | ✅（⚠️「库存↔适配联动」未实现，见缺口⑦） |
+| F-12 库存 | admin-web `/inventory`（+流水页） | /inventory + /{id}/transactions | owner·staff | ✅（缺口⑦已拍板 2026-10-26：v1 不联动，缺货照常展示） |
 | F-13 订单履约 | admin-web `/orders`（发货）+ `/codes`（受控品类按码扫码出库） | /orders/{id}/ship + /codes/outbound | owner·staff·finance(只读) | ✅ |
 | F-14 收款对账 | admin-web `/orders`（到账确认） | /orders/{id}/confirm-payment | owner·**finance** | ⚠️ 部分——**缺口①** |
-| F-15 客户管理 | admin-web `/buyers`（审核通过/驳回） | /buyer-accounts/ + approve/reject | owner·staff | ⚠️ 部分——**缺口②**（分级=P1 明确；黑名单范围未定义） |
+| F-15 客户管理 | admin-web `/buyers`（审核通过/驳回） | /buyer-accounts/ + approve/reject | owner·staff | ⚠️ 部分——分级=P1；黑名单已拍板（缺口②：v1 不做，reject 近似，2026-10-26） |
 | F-16 贴标工作台 | admin-web `/codes`：批次导入→标签打印（print-list，网页可达支持中国远程操作）→收货验码→按码出库→退货回转 | /batches 系列 + /codes/* | owner·staff | ⚠️ 部分——**缺口③（合规 deadline）** |
-| F-17 报表 | admin-web `/reports` | /reports/sales · slow-movers · catalog-coverage · codes-aging | owner·finance·staff(r?) | ✅（staff 无 reports:read——是否有意，见缺口⑦备注） |
+| F-17 报表 | admin-web `/reports` | /reports/sales · slow-movers · catalog-coverage · codes-aging | owner·finance（staff 无 reports:read——已拍板维持，2026-10-26，见缺口⑦） | ✅ |
 
 ### 目录域（26号§4.3，F-20~24）
 
@@ -45,7 +45,7 @@ updated_at: 2026-10-26
 | F-21 数据包导入 | **无界面——CLI 兜底**（`import_seed_package`） | 管理 | owner·data_steward（CLI 权限即 OS 权限） | ⚠️ **缺口④**（M2 载体决策） |
 | F-22 只读查询 | 无独立界面（I1 供两前端消费，匿名+data_steward 门控） | /catalog/v1/* | guest…data_steward | ✅ |
 | F-23 补录暂存/回流 | **Django admin 兜底（D6-A）** | /staging/fitments GET/POST + /staging/export-feed | data_steward（catalog:write ✅） | ⚠️ **缺口⑤：Django admin 零注册——兜底是空头支票** |
-| F-24 目录管理界面 | M2（[ENG-002 盘点](B1RU-ENG-002-f24-copy-survey.md)已出；倾向 admin 兜底→同域轻页面） | —— | data_steward | 📋 规划中 |
+| F-24 目录管理界面 | M2 反馈驱动（[ENG-002 盘点](B1RU-ENG-002-f24-copy-survey.md)已出；✅ 三问已拍板 2026-10-26：admin 兜底→同域轻页面、不新增第四前端、v1 仅 fitments） | —— | data_steward | 📋 规划中（拍板已落档） |
 
 ### 运维项（26号未显式编号，孵化必需）
 
@@ -63,10 +63,18 @@ updated_at: 2026-10-26
 | ③ | ~~F-16 报关清单导出缺失~~ **✅ 已修（2026-10-26）**：`/batches/{batch_no}/customs-export/` CSV（UTF-8 BOM，逐码申报行）+ CodesPage 下载按钮 + 回归 tests/test_customs_export.py | 同左 | ~~P0~~ 已闭环 | —— |
 | ⑤ | ~~Django admin 零注册~~ **✅ 已修（2026-10-26）**：catalog/admin.py 注册 StagedFitment+EntityName（可编辑），commerce/admin.py 注册 ImportBatch（可编辑）+CodeInstance（只读）；**hub 数据模型不注册**（只读纪律防误改） | 同左 | ~~P0~~ 已闭环 | —— |
 | ① | **收单流水查询缺失**：`payments:read/write/manage` 权限码存在但**无任何 /payments/ 端点与界面**（finance 的核心日常=看流水） | ✅ 已核实 | P1（M2 内） | 收单流水列表端点（从 InventoryTransaction/Order 派生）+ finance 可见页 |
-| ④ | F-21 包导入无界面（CLI） | D6/26号 M8 | P1（M2 载体决策） | Django admin 自定义 action 或同域轻页面（与 F-24 路线合并决策） |
+| ④ | F-21 包导入无界面（CLI） | D6/26号 M8 | P1（M2 载体决策） | Django admin 自定义 action 或同域轻页面（与 F-24 路线合并决策；F-24 问1 拍板后对齐：M2 中前维持 CLI，轻页面同样反馈驱动） |
 | ⑥ | 账号管理无界面无流程文档 | ✅ 已核实 | P1 | 内测：CLI 流程写进 deploy/README；M2：owner 建号页（customers 权限外提） |
-| ② | F-15 黑名单范围未定义未实现 | 26号 F-15 提及无 P1 标注 | P2（委托方拍板范围） | v1 以 reject（驳回=不可下单）近似；拉黑老客另立项 |
-| ⑦ | F-12「库存↔适配联动」未实现；staff 无 reports:read 是否有意 | 26号 F-12 说明 | P2 | 内测反馈后定：联动=0 库存自动隐藏适配件？reports 角色归属问委托方 |
+| ② | ~~F-15 黑名单范围~~ **✅ 已拍板（2026-10-26）：v1 不做，以 reject（驳回=不可下单）近似；「拉黑老客」入内测观察清单，真实场景出现再立项** | 26号 F-15 提及无 P1 标注 | ~~P2~~ 已闭环（决策） | —— |
+| ⑦ | ~~库存↔适配联动 / staff reports~~ **✅ 已拍板（2026-10-26）：⑦a v1 不联动，缺货照常展示（标缺货不可下单）；⑦b 维持 reports=owner+finance，内测约一周后问店主** | 26号 F-12 说明 | ~~P2~~ 已闭环（决策） | —— |
+
+### 内测观察清单（2026-10-26 拍板附带，孵化期防再遗漏）
+
+| 观察项 | 来源 | 转正条件 |
+|---|---|---|
+| 「拉黑老客」真实场景是否出现 | 缺口② | 店主遇到坏老客（恶意拒收/欺诈/骚扰）→ 立项最小黑名单（买家标记+下单拦截） |
+| staff 是否需要报表访问 | 缺口⑦b | 内测约一周后问店主——纯业务决策，店主意志优先 |
+| 缺货件展示体验 | 缺口⑦a | 买家/店主反馈「该看到而看不到」成痛点 → 评估实例级展示开关 |
 
 ## 四、孵化期防遗漏机制（本表怎么维护）
 
