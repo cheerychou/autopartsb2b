@@ -18,14 +18,24 @@ import zipfile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from catalog.models import Brand
+from catalog.models import Brand, VehicleModel, VehicleSeries
 from catalog.models_category import Category, CategorySPU, PositionDict
 from catalog.models_entity_names import EntityName
-from catalog.models_product import SPU
+from catalog.models_fitment import SPUFitment
+from catalog.models_product import SPU, SPUInterchange
 
 
 def _pick(row, *fields):
     return {f: row[f] for f in fields if f in row}
+
+
+def _upsert(model, *, lookup: dict, pk_field: str, pk_value, defaults: dict):
+    """业务唯一键幂等 upsert；行带包内 UUID 且该键首次出现时以包内 UUID 建行
+    （接入适配，copy-ledger R-A1++ 登记）。已存在行仅更新 defaults、不触碰主键
+    （幂等重导零漂移；27号§5.2 UUID 主键随包下发，entity_names 依赖它指向实体）。"""
+    if pk_value and not model.objects.filter(**lookup).exists():
+        return model.objects.create(**lookup, **defaults, **{pk_field: pk_value}), True
+    return model.objects.update_or_create(**lookup, defaults=defaults)
 
 
 def _import_brands(rows):
@@ -168,12 +178,219 @@ def _import_entity_names(rows):
     return created, updated
 
 
+# 27号§5.2 接入适配（copy-ledger R-A1++ 登记项）：包内 UUID 主键预绑定——
+# (model, 业务码字段, UUID字段, 骨架必填字段)。行带 *_id 且业务码首次出现时，
+# 先以包内 UUID 建骨架行（随后既有按码 upsert 在同事务内补全字段）；
+# entity_names 的 entity_id 由此才能与实体行对上。骨架必填仅防 NOT NULL。
+UUID_BINDINGS = {
+    "brands": (Brand, "brand_code", "brand_id", ("brand_name", "brand_type", "brand_level")),
+    "vehicle_series": (
+        VehicleSeries,
+        "series_code",
+        "series_id",
+        (
+            "series_name",
+            "brand_id",
+            "brand_code",
+            "brand_name",
+            "series_level",
+            "series_segment",
+            "series_type",
+            "series_positioning",
+            "launch_year",
+        ),
+    ),
+    "vehicle_models": (
+        VehicleModel,
+        "model_code",
+        "model_id",
+        (
+            "model_name",
+            "series_id",
+            "series_code",
+            "series_name",
+            "brand_id",
+            "brand_code",
+            "brand_name",
+        ),
+    ),
+    "categories": (Category, "category_code", "category_id", ("category_name", "category_type")),
+    "spus": (SPU, "spu_code", "spu_id", ("spu_name", "brand_id", "product_type")),
+}
+
+
+def _bind_pack_uuids(entity: str, rows):
+    """骨架行建行（包内 UUID 主键落库）。FK 字段（拷贝域有 brand_id 作字段名的写法）
+    须把包内 UUID 字符串解析为实例；attname 形态（series_id）原样透传即可。"""
+    for r in rows:
+        model, code_field, pk_field, skeleton_fields = UUID_BINDINGS[entity]
+        code, pk = r.get(code_field), r.get(pk_field)
+        if not (code and pk) or model.objects.filter(**{code_field: code}).exists():
+            continue
+        kwargs = {}
+        for f in skeleton_fields:
+            value = r.get(f)
+            if value is None:
+                continue
+            try:
+                field = model._meta.get_field(f)
+            except Exception:
+                kwargs[f] = value  # 非 FK 字段名——attname/冗余列，原样透传（字符串即可）
+                continue
+            if field.is_relation:
+                value = field.remote_field.model.objects.get(pk=value)
+                kwargs[field.name] = value  # FK 字段名走描述符（实例校验），勿塞 attname
+            else:
+                kwargs[f] = value
+        model.objects.create(**{code_field: code, pk_field: pk, **kwargs})
+
+
+def _import_vehicle_series(rows):
+    """车系（R-A1++ 新增实体：按车找件主链）。幂等键=series_code；
+    brand_code/brand_name 冗余列以父表为准（27号§5.0-7）。"""
+    created = updated = 0
+    for r in rows:
+        brand = Brand.objects.get(brand_code=r["brand_code"])
+        _, was_created = _upsert(
+            VehicleSeries,
+            lookup={"series_code": r["series_code"]},
+            pk_field="series_id",
+            pk_value=r.get("series_id"),
+            defaults={
+                **_pick(
+                    r,
+                    "series_name",
+                    "series_name_en",
+                    "series_alias",
+                    "vehicle_class",
+                    "series_level",
+                    "series_segment",
+                    "series_type",
+                    "series_positioning",
+                    "series_status",
+                    "launch_year",
+                    "year_from",
+                    "year_to",
+                ),
+                "brand_id": brand,
+                "brand_code": brand.brand_code,
+                "brand_name": brand.brand_name,
+            },
+        )
+        created, updated = created + was_created, updated + (not was_created)
+    return created, updated
+
+
+def _import_vehicle_models(rows):
+    """车型（R-A1++ 新增实体）。幂等键=model_code；series/brand 冗余列以父表为准。"""
+    created = updated = 0
+    for r in rows:
+        series = VehicleSeries.objects.get(series_code=r["series_code"])
+        brand = series.brand_id
+        _, was_created = _upsert(
+            VehicleModel,
+            lookup={"model_code": r["model_code"]},
+            pk_field="model_id",
+            pk_value=r.get("model_id"),
+            defaults={
+                **_pick(
+                    r,
+                    "model_name",
+                    "vehicle_class",
+                    "model_level",
+                    "status",
+                    "listing_date",
+                ),
+                "series": series,
+                "series_code": series.series_code,
+                "series_name": series.series_name,
+                "brand": brand,
+                "brand_code": brand.brand_code,
+                "brand_name": brand.brand_name,
+            },
+        )
+        created, updated = created + was_created, updated + (not was_created)
+    return created, updated
+
+
+def _import_fitments(rows):
+    """适配关系（R-A1++ 新增实体）。幂等键=包内 fitment_id（27号§5.2：UUID 主键随包
+    下发；本表无业务唯一约束，UUID 即幂等键）——缺 UUID 的包属违约，显式拒收。"""
+    created = updated = 0
+    for r in rows:
+        if not r.get("fitment_id"):
+            raise CommandError("fitments 行缺 fitment_id（27号§5.2：UUID 主键随包下发）")
+        spu = SPU.objects.get(spu_code=r["spu_code"])
+        series = (
+            VehicleSeries.objects.get(series_code=r["series_code"])
+            if r.get("series_code")
+            else None
+        )
+        submodel = (
+            VehicleModel.objects.get(model_code=r["model_code"]) if r.get("model_code") else None
+        )
+        _, was_created = SPUFitment.objects.update_or_create(
+            fitment_id=r["fitment_id"],
+            defaults={
+                **_pick(
+                    r,
+                    "qualifiers",
+                    "match_level",
+                    "priority",
+                    "is_default",
+                    "notes",
+                    "year_from",
+                    "year_to",
+                    "fitment_type",
+                    "fitment_level",
+                    "data_source",
+                    "verified_status",
+                    "verified_by",
+                    "status",
+                ),
+                "spu": spu,
+                "series": series,
+                "submodel": submodel,
+            },
+        )
+        created, updated = created + was_created, updated + (not was_created)
+    return created, updated
+
+
+def _import_spu_interchanges(rows):
+    """互换/交叉号（R-A1++ 新增实体）。幂等键=(source_spu, target_spu)——
+    uniq_spu_interchange_pair 约束即业务唯一键（27号§5.3）。"""
+    created = updated = 0
+    for r in rows:
+        source_spu = SPU.objects.get(spu_code=r["source_spu_code"])
+        target_spu = SPU.objects.get(spu_code=r["target_spu_code"])
+        _, was_created = SPUInterchange.objects.update_or_create(
+            source_spu=source_spu,
+            target_spu=target_spu,
+            defaults=_pick(
+                r,
+                "interchange_type",
+                "direction",
+                "qualifier",
+                "priority",
+                "interchange_status",
+                "notes",
+            ),
+        )
+        created, updated = created + was_created, updated + (not was_created)
+    return created, updated
+
+
 IMPORTERS = {
     "brands": _import_brands,
+    "vehicle_series": _import_vehicle_series,
+    "vehicle_models": _import_vehicle_models,
     "position_dicts": _import_position_dicts,
     "categories": _import_categories,
     "spus": _import_spus,
     "category_spus": _import_category_spus,
+    "spu_interchanges": _import_spu_interchanges,
+    "fitments": _import_fitments,
     "entity_names": _import_entity_names,
 }
 
@@ -247,7 +464,9 @@ class Command(BaseCommand):
         missing_files = [
             n
             for n in manifest.get("import_order", [])
-            if n in IMPORTERS and f"{n}.json" not in zf.namelist()
+            if n in IMPORTERS
+            and (manifest.get("counts") or {}).get(n)
+            and f"{n}.json" not in zf.namelist()
         ]
         if missing_files:
             raise CommandError(f"种子包缺少数据文件: {missing_files}")
@@ -267,6 +486,11 @@ class Command(BaseCommand):
         landed_counts: dict = {}
         try:
             with transaction.atomic():
+                # 27号§5.2 包内 UUID 主键预绑定（R-A1++）：先建骨架行，下方既有按码
+                # upsert 补全——entity_names 的 UUID 指向因此与实体行对上
+                for name in import_order:
+                    if name in UUID_BINDINGS:
+                        _bind_pack_uuids(name, json.loads(zf.read(f"{name}.json")))
                 for name in import_order:
                     rows = json.loads(zf.read(f"{name}.json"))
                     created, updated = IMPORTERS[name](rows)

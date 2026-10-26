@@ -21,6 +21,7 @@ updated_at: 2026-10-25
 | [KNW-B1-EXP-004](KNW-B1-EXP-004-copy-django-domain-adaptation.md) | 受控拷贝 Django 模型域的接入适配三件套 | 跨项目拷贝模型域；makemigrations "No changes" 时 |
 | [KNW-B1-EXP-005](KNW-B1-EXP-005-data-assertion-baseline.md) | 数据断言必须带基准日期与库别（两次被现实修正） | 写含数字的结论；引用 CDD3 库状态时 |
 | [KNW-B1-EXP-006](KNW-B1-EXP-006-sprint-branch-commit-discipline.md) | 快节奏 Sprint 的分支与提交纪律 | 每个 Sprint 开工第一分钟；写 commit message 时 |
+| [KNW-B1-EXP-007](KNW-B1-EXP-007-m1-demo-pack-drill.md) | M1 演示包与对公全链路演练（I3 补实体/UUID 预绑定/DELTA 预检修正 + 六步留证） | 复跑 M1 演示；扩展 I3 导入实体；排查 entity_names 挂接 / DELTA 导入问题时 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 
