@@ -15,6 +15,7 @@ from __future__ import annotations
 import dataclasses
 
 from django.contrib.auth.models import User
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from commerce.models_customer import BuyerAccount
@@ -42,7 +43,10 @@ def resolve_buyer(request) -> Buyer:
     """从请求解析买家形态：JWT 有效→individual/corporate；否则 guest。"""
     try:
         user = JWTAuthentication().authenticate(request)[0]
-    except Exception:  # 无 token/失效 → 游客
+    except (AuthenticationFailed, TypeError):
+        # P3（except 收窄）：AuthenticationFailed=token 无效/过期（InvalidToken 基类）；
+        # TypeError=匿名请求 authenticate 返回 None 取 [0]。其余异常（如 DB 故障）
+        # 不再吞成游客——静默降级会掩盖故障
         return Buyer(kind="guest", user=None, account=None)
     account = getattr(user, "buyer_account", None)
     if account is None:  # 管理端账号误用买家端点 → 视为 guest（不带价）

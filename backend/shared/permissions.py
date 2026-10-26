@@ -19,6 +19,19 @@
 from __future__ import annotations
 
 from rest_framework.permissions import BasePermission
+from rest_framework.throttling import AnonRateThrottle
+
+
+class AuthRateThrottle(AnonRateThrottle):
+    """register / login / 凭证签发端点的匿名暴力破解防线（P3）。
+
+    用固定 scope 子类而非 ScopedRateThrottle+throttle_scope：KNW-B1-EXP-001——
+    api_view 只拷贝官方属性表，函数视图挂 throttle_scope 会被静默丢弃。
+    速率 = REST_FRAMEWORK.DEFAULT_THROTTLE_RATES["auth"]（env: B1RU_AUTH_THROTTLE_RATE）。
+    """
+
+    scope = "auth"
+
 
 # 单一角色真相源：shared/management/commands/init_rbac.py（落库为 Django Groups）
 ROLES = ("owner", "staff", "finance", "data_steward")

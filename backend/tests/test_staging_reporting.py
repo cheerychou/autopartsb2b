@@ -52,11 +52,11 @@ def fitment_seed():
 
 
 def test_staging_requires_steward(fitment_seed):
-    """暂存读写限 data_steward（匿名 fail-closed 403）。"""
+    """暂存读写限 data_steward（匿名未认证 401；P3 改统一 require_permission 机制）。"""
     api = APIClient()
-    assert api.get("/catalog/v1/staging/fitments").status_code == 403
-    assert api.post("/catalog/v1/staging/fitments", {}, format="json").status_code == 403
-    assert api.post("/catalog/v1/staging/export-feed").status_code == 403
+    assert api.get("/catalog/v1/staging/fitments").status_code == 401
+    assert api.post("/catalog/v1/staging/fitments", {}, format="json").status_code == 401
+    assert api.post("/catalog/v1/staging/export-feed").status_code == 401
 
 
 def test_staging_create_and_export_feed(steward_api, fitment_seed):
@@ -75,9 +75,9 @@ def test_staging_create_and_export_feed(steward_api, fitment_seed):
     )
     assert r.status_code == 201, r.content
 
-    # 匿名/无关账号不可见暂存数据
+    # 匿名/无关账号不可见暂存数据（未认证 401；已认证无权 403——RoleBasedPermission）
     anon = APIClient()
-    assert anon.get("/catalog/v1/staging/fitments").status_code == 403
+    assert anon.get("/catalog/v1/staging/fitments").status_code == 401
 
     # 空导出防御已在 service 层；先验证有行可导
     r2 = api.post("/catalog/v1/staging/export-feed")

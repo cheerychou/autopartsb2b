@@ -73,7 +73,11 @@ def confirm_payment(order: Order, *, confirmed_by, amount, note: str = "") -> Or
 
 @transaction.atomic
 def ship_order(order: Order, *, tracking_no: str, carrier: str = "") -> Order:
-    """F-13 发货：paid → shipped + 物流单号（CDEK 等面单自动对接 P1，此处人工录入）。"""
+    """F-13 发货：paid → shipped + 物流单号（CDEK 等面单自动对接 P1，此处人工录入）。
+
+    行锁重读（P3：与 confirm_payment 同一防线——并发双发货/发货与核销竞态窗口）。
+    """
+    order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status != Order.Status.PAID:
         raise OrderStateError(f"仅已付款订单可发货，当前: {order.status}")
     if not tracking_no:

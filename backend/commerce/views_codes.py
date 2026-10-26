@@ -178,7 +178,8 @@ def outbound_codes(request):
     if s.validated_data.get("order_id"):
         from commerce.models_order import Order
 
-        order = Order.objects.filter(order_id=s.validated_data["order_id"]).first()
+        # 无效订单号显式 404（P3：不再静默降级为"无订单出库"）
+        order = get_object_or_404(Order, order_id=s.validated_data["order_id"])
     try:
         codes = services_codes.outbound_codes(
             product=product, code_values=s.validated_data["code_values"], order=order

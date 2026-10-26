@@ -88,7 +88,15 @@ def record_inventory(
 
 
 def approve_corporate(account: BuyerAccount, *, by, note: str = "") -> BuyerAccount:
-    """F-15 审核状态机：pending/rejected → approved（管理端动作回写买家状态）。"""
+    """F-15 审核状态机：pending/rejected → approved（管理端动作回写买家状态）。
+
+    状态前置（P3）：仅 pending/rejected 可审批——已 approved 重复审批属误操作，
+    显式拒绝（防审核意见被静默覆盖）。个人客户无审核流。
+    """
+    if account.buyer_type != BuyerAccount.BuyerType.CORPORATE:
+        raise ValueError("个人客户无审核流")
+    if account.verification_status == BuyerAccount.VerificationStatus.APPROVED:
+        raise ValueError("该企业账号已是认证状态，不可重复审批")
     account.verification_status = BuyerAccount.VerificationStatus.APPROVED
     account.verification_note = note
     account.verified_by = by

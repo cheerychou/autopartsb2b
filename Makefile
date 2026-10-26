@@ -30,7 +30,7 @@ migrate: ## 执行迁移（只向前兼容）
 
 test: test-backend test-frontend ## 全量测试
 test-backend: ## 后端 pytest（封闭 SQLite；PG 集成测试随 S1 接入）
-	cd $(BACKEND_DIR) && B1RU_TEST_SQLITE=1 ./venv/bin/pytest
+	cd $(BACKEND_DIR) && B1RU_TEST_SQLITE=1 B1RU_AUTH_THROTTLE_RATE=10000/min ./venv/bin/pytest
 test-frontend: ## 前端两应用测试
 	cd $(FRONTEND_DIR) && pnpm -r test:run
 

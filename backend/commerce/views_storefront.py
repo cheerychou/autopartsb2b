@@ -13,7 +13,7 @@ import uuid
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -24,6 +24,7 @@ from commerce.models_order import CartItem, Order
 from commerce.models_product import Product
 from commerce.services_buyer import Buyer, register_buyer, resolve_buyer
 from commerce.services_order import OrderError, place_order
+from shared.permissions import AuthRateThrottle
 
 
 def err(http: int, error_code: str, message_ru: str = ""):
@@ -66,6 +67,7 @@ class RegisterSerializer(serializers.Serializer):
 @extend_schema(request=RegisterSerializer)
 @api_view(["POST"])
 @permission_classes([])
+@throttle_classes([AuthRateThrottle])  # P3：注册匿名限流
 def register(request):
     """F-01 注册：individual 即用；corporate 落 pending 待管理端审核（F-15）。"""
     s = RegisterSerializer(data=request.data)
@@ -82,6 +84,15 @@ def register(request):
         inn=d["inn"],
     )
     refresh = RefreshToken.for_user(account.user)
+    # P3（meta 时序修正）：注册响应的 meta 反映刚注册的形态（原 resolve_buyer(request)
+    # 在 token 未挂请求时恒为 guest，与 data 自相矛盾）
+    buyer = Buyer(
+        kind=(
+            "corporate" if account.buyer_type == BuyerAccount.BuyerType.CORPORATE else "individual"
+        ),
+        user=account.user,
+        account=account,
+    )
     return Response(
         {
             "data": {
@@ -90,7 +101,7 @@ def register(request):
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
             },
-            "meta": _buyer_meta(request, resolve_buyer(request)),
+            "meta": _buyer_meta(request, buyer),
         },
         status=201,
     )
@@ -110,6 +121,7 @@ class LoginSerializer(serializers.Serializer):
 @extend_schema(request=LoginSerializer)
 @api_view(["POST"])
 @permission_classes([])
+@throttle_classes([AuthRateThrottle])  # P3：登录匿名限流
 def login(request):
     """F-01 登录：返回 JWT 与形态/资格（前端据此渲染门控）。"""
     from django.contrib.auth import authenticate
@@ -125,7 +137,8 @@ def login(request):
     if account is None:
         return err(403, "NOT_BUYER_ACCOUNT")
     refresh = RefreshToken.for_user(user)
-    buyer = resolve_buyer(request)  # 注：此处 token 尚未挂在请求上，显式构造
+    # P3（meta 时序修正）：删去死调用 resolve_buyer(request)（token 未挂请求恒解析为
+    # guest）；meta 与 data 统一反映登录后形态
     buyer = Buyer(
         kind=(
             "corporate" if account.buyer_type == BuyerAccount.BuyerType.CORPORATE else "individual"
@@ -143,7 +156,7 @@ def login(request):
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
             },
-            "meta": _buyer_meta(request, Buyer(kind="guest", user=None, account=None)),
+            "meta": _buyer_meta(request, buyer),
         }
     )
 

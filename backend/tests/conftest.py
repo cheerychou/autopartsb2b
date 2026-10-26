@@ -1,4 +1,10 @@
-"""共享 fixture（跨测试文件；承 CDD3 conftest 模式）。"""
+"""共享 fixture（跨测试文件；承 CDD3 conftest 模式）。
+
+⚠️ 禁止在测试内 override_settings(REST_FRAMEWORK=...)：DRF 视图链 lazy import 时，
+APIView.authentication_classes / SimpleRateThrottle.THROTTLE_RATES 会把覆写字典
+**永久绑进类快照**（整进程的 Bearer 认证/限流全废）。测试限流速率统一走
+B1RU_AUTH_THROTTLE_RATE 环境变量（Makefile test-backend 设 10000/min）。
+"""
 
 import pytest
 

@@ -1,0 +1,3 @@
+
+# CDD3 受控拷贝剥离项补遗（R-B2）：编译产物不进 src（台账 B1RU-ENG-001）
+packages/b1-shared-ui/src/**/*.d.ts.map

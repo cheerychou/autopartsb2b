@@ -133,6 +133,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,  # 29号§二：默认 20 上限 100
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    # P3：认证入口匿名限流（shared.permissions.AuthRateThrottle 挂 register/login/token）
+    "DEFAULT_THROTTLE_RATES": {
+        "auth": os.environ.get("B1RU_AUTH_THROTTLE_RATE", "60/min"),
+    },
 }
 
 SPECTACULAR_SETTINGS = {

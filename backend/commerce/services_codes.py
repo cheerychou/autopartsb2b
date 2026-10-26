@@ -108,8 +108,11 @@ def receive_batch(batch: ImportBatch, *, code_values: list[str] | None = None) -
             quantity=qty,
             note=f"批次 {batch.batch_no} 收货验码",
         )
-    batch.status = ImportBatch.Status.IN_STOCK
-    batch.save(update_fields=["status"])
+    # 部分验收语义（P3 修正：部分验收不再整批 in_stock）——仍有 labelled 残余则
+    # 批次保持 labeled 继续收货，全部验收完才转 in_stock
+    if not batch.codes.filter(state=CodeInstance.State.LABELLED).exists():
+        batch.status = ImportBatch.Status.IN_STOCK
+        batch.save(update_fields=["status"])
     return {"received": len(codes), "by_product": {str(k): v for k, v in by_product.items()}}
 
 
@@ -179,17 +182,17 @@ def aging_report() -> list[dict]:
 
     rows = (
         CodeInstance.objects.filter(state=CodeInstance.State.IN_STOCK)
-        .values("batch_id", "batch__batch_no")
+        .values("batch_id", "batch__batch_no", "batch__created_at")
         .annotate(in_stock=Count("code_id"))
     )
     now = timezone.now()
     out = []
     for r in rows:
-        batch = ImportBatch.objects.get(pk=r["batch_id"])
-        days = (now - batch.created_at).days
+        # 批次信息已随 values() 联表带出（P3：消除逐行 ImportBatch.get 的 N+1）
+        days = (now - r["batch__created_at"]).days
         out.append(
             {
-                "batch_no": batch.batch_no,
+                "batch_no": r["batch__batch_no"],
                 "in_stock": r["in_stock"],
                 "age_days": days,
                 "aging_bucket": "0-30" if days <= 30 else "31-90" if days <= 90 else "90+",

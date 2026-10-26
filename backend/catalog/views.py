@@ -14,7 +14,7 @@ from catalog.models_category import Category
 from catalog.models_fitment import SPUFitment
 from catalog.models_product import SPU
 from catalog.services import query as Q
-from shared.permissions import has_permission
+from shared.permissions import has_permission, require_permission
 
 
 class NameChainMixin(serializers.Serializer):
@@ -134,6 +134,20 @@ def _can_see_unverified(request) -> bool:
     return has_permission(request.user, "catalog:write")
 
 
+def _int_param(request, name: str, default: int, *, cap: int | None = None) -> int | None:
+    """分页参数防御（P3：page/page_size 非数字/负数不再 500）。非法 → None（调用方 400）。"""
+    raw = request.query_params.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
+    if value < 1:
+        return None
+    return min(value, cap) if cap else value
+
+
 def _meta(request, total=None, resolved_locale: str | None = None):
     """resolved_locale=实际解析语言（如实返回；评审：不得宣称请求头语言）。
     None 时退化为回退链首段 ru（entity_names 就位前的声明性缺省）。"""
@@ -198,12 +212,25 @@ def fitments(request):
             },
             status=400,
         )
+    page = _int_param(request, "page", 1)
+    page_size = _int_param(request, "page_size", 20, cap=100)
+    if page is None or page_size is None:
+        return Response(
+            {
+                "error": {
+                    "code": "400",
+                    "error_code": "BAD_PAGINATION",
+                    "message": "page/page_size must be positive integers",
+                }
+            },
+            status=400,
+        )
     query = Q.FitmentQuery(
         model_id=model_id,
         category_id=request.query_params.get("category_id") or None,
         q=request.query_params.get("q") or None,
-        page=int(request.query_params.get("page", 1)),
-        page_size=min(int(request.query_params.get("page_size", 20)), 100),
+        page=page,
+        page_size=page_size,
         # 评审 P0-3：include_unverified 绑角色（catalog:write=data_steward/owner），匿名传参无效
         verified_only=not _can_see_unverified(request),
     )
@@ -352,16 +379,12 @@ class StagedFitmentSerializer(serializers.ModelSerializer):
 
 
 @api_view(["GET", "POST"])
-@permission_classes([])
+@require_permission("catalog:write")  # P3：统一权限机制（读写均限 data_steward/owner）
 def staged_fitments(request):
-    """F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。"""
+    """F-23 暂存：列表（GET）/新增补录行（POST）——读写均限 data_steward/owner。"""
     from catalog.models_staging import StagedFitment
-    from shared.permissions import has_permission
 
     if request.method == "GET":
-        # 匿名可见性=公开目录不含暂存数据：读也限 data_steward（评审 P0-3 同语义）
-        if not has_permission(request.user, "catalog:write"):
-            return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
         rows = StagedFitment.objects.all().order_by("-created_at")
         return Response(
             {
@@ -370,8 +393,6 @@ def staged_fitments(request):
             }
         )
     # POST
-    if not has_permission(request.user, "catalog:write"):
-        return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
     s = StagedFitmentSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     row = StagedFitment.objects.create(
@@ -393,13 +414,9 @@ def staged_fitments(request):
 
 
 @api_view(["POST"])
-@permission_classes([])
+@require_permission("catalog:write")  # P3：统一权限机制
 def export_feed(request):
     """I4 后半：FEED 变更集导出（tar.gz，人工上传总仓；data_steward/owner）。"""
-    from shared.permissions import has_permission
-
-    if not has_permission(request.user, "catalog:write"):
-        return Response({"error": {"code": "403", "error_code": "FORBIDDEN"}}, status=403)
     from catalog.services_feed import export_feed
 
     try:

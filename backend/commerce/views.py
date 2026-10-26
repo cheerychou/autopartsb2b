@@ -18,11 +18,14 @@ from commerce import services, services_fulfillment, services_pricing
 from commerce.models_customer import BuyerAccount
 from commerce.models_order import Order, OrderItem
 from commerce.models_product import InventoryItem, InventoryTransaction, Product
-from shared.permissions import RoleBasedPermission, require_permission
+from shared.permissions import AuthRateThrottle, RoleBasedPermission, require_permission
 
 
 class AdminTokenObtainPairView(TokenObtainPairView):
     """管理端登录：凭据有效但无管理角色 → 403（买家账号走 storefront 登录，两不混淆）。"""
+
+    # P3：认证入口匿名限流（与 storefront register/login 同 scope）
+    throttle_classes = [AuthRateThrottle]
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
@@ -296,7 +299,11 @@ class BuyerAccountViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": {"code": "400", "message": "个人客户无审核流"}}, status=400)
         s = self.DecisionSerializer(data=request.data)
         s.is_valid(raise_exception=True)
-        services.approve_corporate(account, by=request.user, note=s.validated_data["note"])
+        try:
+            services.approve_corporate(account, by=request.user, note=s.validated_data["note"])
+        except ValueError as e:
+            # 状态前置拒绝（P3）：重复审批/个人客户——400 带原因
+            return Response({"error": {"code": "400", "message": str(e)}}, status=400)
         return Response(BuyerAccountSerializer(account).data)
 
     @extend_schema(request=DecisionSerializer)
