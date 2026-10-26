@@ -959,7 +959,7 @@ paths:
   /catalog/v1/staging/fitments:
     get:
       operationId: catalog_v1_staging_fitments_retrieve
-      description: F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。
+      description: F-23 暂存：列表（GET）/新增补录行（POST）——读写均限 data_steward/owner。
       tags:
       - catalog
       security:
@@ -969,7 +969,7 @@ paths:
           description: No response body
     post:
       operationId: catalog_v1_staging_fitments_create
-      description: F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。
+      description: F-23 暂存：列表（GET）/新增补录行（POST）——读写均限 data_steward/owner。
       tags:
       - catalog
       security:

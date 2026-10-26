@@ -690,10 +690,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。 */
+        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——读写均限 data_steward/owner。 */
         get: operations["catalog_v1_staging_fitments_retrieve"];
         put?: never;
-        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——写操作限 data_steward/owner。 */
+        /** @description F-23 暂存：列表（GET）/新增补录行（POST）——读写均限 data_steward/owner。 */
         post: operations["catalog_v1_staging_fitments_create"];
         delete?: never;
         options?: never;

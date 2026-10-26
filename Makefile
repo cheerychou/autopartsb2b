@@ -1,6 +1,6 @@
 # B1-RU 开发管理 Makefile（承 CDD3 命令体系模式）
 
-.PHONY: help dev dev-backend dev-frontend migrate makemigrations test test-backend test-backend-pg test-frontend
+.PHONY: help dev dev-backend dev-frontend migrate makemigrations test test-backend test-backend-pg test-frontend api-types check-schema-drift
 .PHONY: lint lint-backend lint-frontend type-check schema pre-check install install-backend install-frontend
 
 .DEFAULT_GOAL := help
@@ -48,6 +48,16 @@ type-check: ## 前端类型检查
 schema: ## 导出 OpenAPI schema（类型管线第 1 步）
 	cd $(BACKEND_DIR) && ./venv/bin/python manage.py spectacular --file schema.yml
 
-pre-check: lint type-check test-backend test-frontend ## 提交前全量预检（含禁止模式）
+api-types: schema ## 类型管线 round-trip：导出 OpenAPI → 生成两端 TS 类型（后端契约改动后必跑）
+	cd $(FRONTEND_DIR) && pnpm --filter storefront-web generate:api-types && pnpm --filter admin-web generate:api-types
+
+check-schema-drift: ## schema 漂移检测：重导前后自比（变了=文件落后于代码；与是否已提交无关）
+	@before=$$(mktemp) && cp backend/schema.yml "$$before" \
+		&& $(MAKE) --no-print-directory schema \
+		&& { diff -q "$$before" backend/schema.yml >/dev/null || \
+			{ echo "❌ backend/schema.yml 落后于代码——已自动重导（连带跑 make api-types 同步两端类型），请 git add 提交更新"; exit 1; }; } \
+		&& rm -f "$$before" && echo "✅ schema 无漂移"
+
+pre-check: lint type-check test-backend test-frontend check-schema-drift ## 提交前全量预检（含禁止模式）
 	@bash scripts/ci/check-banned-patterns.sh
 	@echo "✅ pre-check 全绿（schema 三连请按 .zcode/skills/pre-check-before-pr 手动执行）"
