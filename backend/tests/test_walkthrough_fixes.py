@@ -451,3 +451,28 @@ def test_batch_list_with_code_count():
     nos = [b["batch_no"] for b in r.json()["data"]]
     assert nos[:2] == ["WA-L2", "WA-L1"]  # 新→旧
     assert all(b["code_count"] == 0 for b in r.json()["data"])
+
+
+def test_ship_response_contract():
+    """P1-2 同型回归：ship 响应必须反映迁移后状态+面单号。
+
+    DoD1 断网演练（2026-10-26）实证的漏网点：confirm/cancel 修过「响应接服务层
+    返回值」，ship 漏改——响应恒 paid + 空 tracking_no（bash 版 drill 无断言未暴露）。
+    """
+    product = _product(code_suffix="c")
+    buyer, order = _awaiting_order(product)
+    api = _admin_with_role("owner")  # owner 含 payments:manage
+    r = api.post(
+        f"/api/v1/orders/{order.order_id}/confirm-payment/",
+        {"amount": str(order.total_amount), "note": "测试核销"},
+        format="json",
+    )
+    assert r.status_code == 200, r.content
+    r2 = api.post(
+        f"/api/v1/orders/{order.order_id}/ship/",
+        {"tracking_no": "CDEK-CONTRACT", "carrier": "CDEK"},
+        format="json",
+    )
+    assert r2.status_code == 200, r2.content
+    assert r2.json()["data"]["status"] == "shipped"  # 修复点：原恒 paid（旧对象）
+    assert r2.json()["data"]["tracking_no"] == "CDEK-CONTRACT"  # 修复点：原恒空

@@ -377,7 +377,9 @@ def ship_order(request, order_id):
     s = ShipSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     try:
-        services_fulfillment.ship_order(
+        # 必须接收服务层返回值（P1-2 同型修复：ship 漏网点——响应用迁移前旧对象，
+        # status 恒 paid、tracking_no 恒空；DoD1 断网演练硬断言实证）
+        order = services_fulfillment.ship_order(
             order,
             tracking_no=s.validated_data["tracking_no"],
             carrier=s.validated_data["carrier"],

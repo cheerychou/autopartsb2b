@@ -24,6 +24,7 @@ updated_at: 2026-10-25
 | [KNW-B1-EXP-007](KNW-B1-EXP-007-m1-demo-pack-drill.md) | M1 演示包与对公全链路演练（I3 补实体/UUID 预绑定/DELTA 预检修正 + 六步留证） | 复跑 M1 演示；扩展 I3 导入实体；排查 entity_names 挂接 / DELTA 导入问题时 |
 | [KNW-B1-EXP-008](KNW-B1-EXP-008-drf-override-settings-snapshot-poison.md) | 测试内 override_settings(REST_FRAMEWORK) 毒化 DRF import 期类快照（认证/限流整进程报废） | 写 DRF 限流/认证测试；遇"单测过全量挂、失败点漂移"的认证/限流报错时 |
 | [KNW-B1-EXP-009](KNW-B1-EXP-009-sqlite-test-blind-spots-pg-tier.md) | SQLite 档盲区（varchar 长度零校验/行锁零验证）与 PG 真库测试档（make test-backend-pg + 双线程竞态模式） | 改动涉行锁/varchar 边界/事务回滚；DoD 2 验收前；遇"SQLite 全绿但真库 DataError"时 |
+| [KNW-B1-EXP-010](KNW-B1-EXP-010-dod1-offline-verification.md) | DoD 1 断网自足验证（L1 静态审计 + internal 网络 drill）与演示脚本硬断言纪律（bash 无断言掩盖 ship 响应契约 bug） | DoD 1 验收；交付单元构建遇 registry 不可达/端口映射不生效；写验收脚本前 |
 
 ## 种子参考（CDD3 侧同域教训，本项目遇到对应任务时先去 CDD3 仓读原文）
 
