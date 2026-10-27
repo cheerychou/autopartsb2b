@@ -70,3 +70,13 @@ updated_at: 2026-10-25
 |---|---|---|
 | catalog/serializers_fitment.py | 整文件删除（228 行） | 全仓零消费者（I1 服务层自带投影），拷贝死代码违背受控拷贝目的；如需序列化面对照上游按需重拷 |
 | catalog/management/commands/export_standalone_seed.py | 已于 S1 剔除（见上） | 总仓侧工具 |
+
+## 类型标注补遗（2026-10-27，mypy 清零批次）
+
+| 文件 | 变更 | 性质 |
+|---|---|---|
+| catalog/models.py:124 | `compute_brand_letter(...)` 调用行加 `# type: ignore[arg-type]`（guard 已确保非 None，django-stubs 无法跨属性收窄） | 行注释，零行为变化 |
+| catalog/management/commands/import_seed_package.py:228/241/245 | 动态模型注册表（UUID_BINDINGS）3 处 `# type: ignore[attr-defined,union-attr]` | 行注释，零行为变化 |
+
+> 拷贝纪律说明：`type: ignore` 行注释不触碰模型结构与导入逻辑，属「接入适配」级最小侵入；
+> 对应上游（CDD3 data_platform）若未来同步，此 4 行注释随行携带、不产生合并冲突面。

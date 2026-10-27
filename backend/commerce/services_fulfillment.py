@@ -20,7 +20,12 @@ from commerce.models_product import InventoryTransaction
 
 
 class OrderStateError(Exception):
-    """非法状态迁移。"""
+    """非法状态迁移。code 为稳定业务码（26号§六：买家侧按语言包渲染，禁直出中文）。"""
+
+    def __init__(self, code: str, message_ru: str = ""):
+        super().__init__(message_ru or code)
+        self.code = code
+        self.message_ru = message_ru
 
 
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
@@ -39,7 +44,9 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 
 def _transition(order: Order, to: str) -> Order:
     if to not in ALLOWED_TRANSITIONS.get(order.status, set()):
-        raise OrderStateError(f"非法状态迁移: {order.status} → {to}")
+        raise OrderStateError(
+            "INVALID_TRANSITION", f"Недопустимый переход статуса: {order.status} → {to}"
+        )
     order.status = to
     order.save(update_fields=["status", "updated_at"])
     return order
@@ -59,7 +66,10 @@ def confirm_payment(order: Order, *, confirmed_by, amount, note: str = "") -> Or
     # 行锁重读（并发双核销窗口关闭：两请求串行化，第二个看到 PAID 即拒）
     order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status != Order.Status.AWAITING_CONFIRMATION:
-        raise OrderStateError(f"仅待确认到账订单可核销，当前: {order.status}")
+        raise OrderStateError(
+            "NOT_AWAITING_CONFIRMATION",
+            f"Подтверждение оплаты недоступно, статус заказа: {order.status}",
+        )
     if amount != order.total_amount:
         raise ValueError(f"到账金额不符: 订单 {order.total_amount} ₽, 录入 {amount} ₽")
     order.payment_confirmed_by = confirmed_by
@@ -79,7 +89,7 @@ def ship_order(order: Order, *, tracking_no: str, carrier: str = "") -> Order:
     """
     order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status != Order.Status.PAID:
-        raise OrderStateError(f"仅已付款订单可发货，当前: {order.status}")
+        raise OrderStateError("NOT_PAID", f"Отгрузка недоступна, статус заказа: {order.status}")
     if not tracking_no:
         raise ValueError("发货必须录入物流单号")
     order.tracking_no = tracking_no
@@ -100,7 +110,10 @@ def cancel_order(order: Order, *, note: str = "", cancelled_by=None) -> Order:
     下单已扣库存，取消不回补=流水有出无回、账实脱钩）。回补走 F-12 同账 append-only。"""
     order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status not in (Order.Status.PENDING_PAYMENT, Order.Status.AWAITING_CONFIRMATION):
-        raise OrderStateError("已付款订单不可直接取消（退款流程另行裁定）")
+        raise OrderStateError(
+            "PAID_CANCEL_FORBIDDEN",
+            "Отмена оплаченного заказа невозможна (возврат средств — отдельный процесс)",
+        )
     order.cancellation_note = note
     order.save(update_fields=["cancellation_note", "updated_at"])
     # 回补库存：逐行 inbound 回冲（append-only，账实同步恢复）

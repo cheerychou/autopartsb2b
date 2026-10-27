@@ -10,6 +10,7 @@
 """
 
 import uuid
+from decimal import Decimal
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
@@ -269,6 +270,7 @@ def _require_buyer(request, *, need_order: bool = False) -> tuple[Buyer | None, 
     if buyer.kind == "guest":
         return None, err(401, "LOGIN_REQUIRED")
     if need_order and not buyer.can_order:
+        assert buyer.account is not None  # kind 非 guest ⇒ account 必非 None（mypy 收窄）
         pending = buyer.account.verification_status == BuyerAccount.VerificationStatus.PENDING
         code = "CORPORATE_PENDING" if pending else "CORPORATE_REJECTED"
         msg_ru = "Ваша компания на проверке" if pending else "Компания не прошла проверку"
@@ -287,6 +289,7 @@ def cart_add(request):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     s = CartAddSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     product = Product.objects.filter(
@@ -317,6 +320,7 @@ def cart_remove(request):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     s = CartRemoveSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     deleted, _ = CartItem.objects.filter(
@@ -333,9 +337,10 @@ def cart_view(request):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     items = CartItem.objects.filter(account=buyer.account).select_related("product")
     data = []
-    total = 0
+    total = Decimal("0")
     for it in items:
         price = it.product.price_amount
         line = price * it.quantity
@@ -365,6 +370,8 @@ def checkout(request):
     buyer, err_resp = _require_buyer(request, need_order=True)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
+    assert buyer.account is not None  # kind 非 guest ⇒ account 必非 None（resolve_buyer 契约）
     s = CheckoutSerializer(data=request.data)
     s.is_valid(raise_exception=True)
     try:
@@ -401,6 +408,7 @@ def my_orders(request):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     orders = Order.objects.filter(account=buyer.account)
     return Response(
         {
@@ -426,6 +434,7 @@ def my_order_detail(request, order_id: uuid.UUID):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     order = (
         Order.objects.prefetch_related("items")
         .filter(order_id=order_id, account=buyer.account)
@@ -467,6 +476,7 @@ def confirm_receipt(request, order_id: uuid.UUID):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
     if order is None:
         return err(404, "ORDER_NOT_FOUND", "Заказ не найден")
@@ -486,6 +496,7 @@ def cancel_my_order(request, order_id: uuid.UUID):
     buyer, err_resp = _require_buyer(request)
     if err_resp:
         return err_resp
+    assert buyer is not None  # 契约：err 为空 ⇒ buyer 必非 None（mypy 收窄）
     order = Order.objects.filter(order_id=order_id, account=buyer.account).first()
     if order is None:
         return err(404, "ORDER_NOT_FOUND", "Заказ не найден")

@@ -21,6 +21,7 @@ import uuid
 import zipfile
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 from django.core.management.base import BaseCommand
 
@@ -634,7 +635,7 @@ _DELTA_ROWS = {
     ],
 }
 
-_PACKS = {
+_PACKS: dict[str, dict[str, Any]] = {
     "INIT": {
         "version": "DEMO-0001",
         "rows": _INIT_ROWS,

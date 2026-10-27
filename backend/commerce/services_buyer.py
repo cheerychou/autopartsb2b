@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import dataclasses
 
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import User
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -26,7 +27,7 @@ class Buyer:
     """请求的买家形态解析结果。"""
 
     kind: str  # guest / individual / corporate
-    user: User | None
+    user: AbstractBaseUser | None  # DRF authenticate 产物（JWT user 非必然 Django User）
     account: BuyerAccount | None
 
     @property
@@ -42,7 +43,8 @@ class Buyer:
 def resolve_buyer(request) -> Buyer:
     """从请求解析买家形态：JWT 有效→individual/corporate；否则 guest。"""
     try:
-        user = JWTAuthentication().authenticate(request)[0]
+        auth = JWTAuthentication().authenticate(request)
+        user = auth[0] if auth else None
     except (AuthenticationFailed, TypeError):
         # P3（except 收窄）：AuthenticationFailed=token 无效/过期（InvalidToken 基类）；
         # TypeError=匿名请求 authenticate 返回 None 取 [0]。其余异常（如 DB 故障）

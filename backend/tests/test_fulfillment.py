@@ -10,10 +10,7 @@ from catalog.models import Brand
 from catalog.models_product import SPU
 from commerce.models_order import Order
 from commerce.models_product import InventoryTransaction, Product
-from commerce.services import (
-    create_product_from_catalog,
-    record_inventory,
-)
+from commerce.services import create_product_from_catalog, record_inventory
 from commerce.services_fulfillment import (
     OrderStateError,
     cancel_order,
@@ -189,3 +186,22 @@ def test_confirm_receipt_completed(paid_order):
     assert resp.status_code == 200
     o.refresh_from_db()
     assert o.status == Order.Status.COMPLETED
+
+
+def test_confirm_receipt_illegal_state_is_409_not_500(paid_order):
+    """守卫（EXP-015 同族）：awaiting_confirmation 直接签收 → 409 稳定码，非 500。
+
+    回归：OrderStateError 参数化前 e.code 属性不存在——此分支实际 AttributeError 500。
+    """
+    o = paid_order["order"]
+    buyer_api = APIClient()
+    token = str(
+        __import__("rest_framework_simplejwt.tokens", fromlist=["RefreshToken"])
+        .RefreshToken.for_user(paid_order["buyer"])
+        .access_token
+    )
+    buyer_api.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    resp = buyer_api.post(f"/storefront/v1/orders/{o.order_id}/confirm-receipt")
+    assert resp.status_code == 409
+    body = resp.json()["error"]
+    assert body["error_code"] == "INVALID_TRANSITION"

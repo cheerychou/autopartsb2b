@@ -135,7 +135,7 @@ def list_series(brand_id: str):
 
 def list_models(series_id: str):
     return (
-        VehicleModel.objects.filter(series_id=series_id)
+        VehicleModel.objects.filter(series_id=series_id)  # type: ignore[misc]  # str→UUID 合法
         .exclude(status="inactive")
         .select_related("engine_config", "trans_config", "drive_config")
         .order_by("model_code")
@@ -161,7 +161,7 @@ def fitment_spus(query: FitmentQuery):
     """
     qs = SPUFitment.objects.filter(
         status="active",
-        submodel_id=query.model_id,
+        submodel_id=query.model_id,  # type: ignore[misc]  # 同上：str→FK coercion
     ).select_related("spu__brand_id", "series", "submodel")
     if query.verified_only:
         qs = qs.verified_only()
@@ -223,7 +223,7 @@ def spu_interchanges(spu_id: str):
     from catalog.models_product import SPUInterchange as XI
 
     return (
-        XI.objects.filter(source_spu_id=spu_id)
+        XI.objects.filter(source_spu_id=spu_id)  # type: ignore[misc]  # str→UUID 合法
         .select_related("target_spu__brand_id")
         .order_by("-priority")
     )
@@ -238,7 +238,8 @@ def picker_candidates(*, model_id=None, oe=None, category_id=None, q=None, verif
     if oe:
         qs = qs.filter(oe_number__in=oe_variants(oe))
     if category_id:
-        qs = qs.filter(category_spus__category_id=category_id)
+        # SPU 侧反向名=category_links（CategorySPU.spu.related_name；category_spus 在 Category 侧）
+        qs = qs.filter(category_links__category_id=category_id)
     if q:
         qs = qs.filter(spu_name__icontains=q)
     if model_id:

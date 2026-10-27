@@ -13,6 +13,8 @@
 （走查 P1-1 纠偏）；若未来引入常驻调度，属部署形态变更，须委托方批准。
 """
 
+from datetime import timedelta
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -37,7 +39,7 @@ def relist_with_new_price(product: Product, *, price_amount, price_days: int = 3
     now = timezone.now()
     product.price_amount = price_amount
     product.price_starts_at = now
-    product.price_expires_at = now + timezone.timedelta(days=price_days)
+    product.price_expires_at = now + timedelta(days=price_days)
     product.is_listed = True
     product.save(
         update_fields=[

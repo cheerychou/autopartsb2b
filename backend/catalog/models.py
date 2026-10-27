@@ -121,7 +121,9 @@ class Brand(models.Model):
     def save(self, *args, **kwargs):
         # brand_letter 导入时自动计算（EA-DA-020 §六遗留；已有字母不覆盖）
         if self.brand_name and not self.brand_letter:
-            self.brand_letter = compute_brand_letter(self.brand_name, self.brand_name_en)
+            self.brand_letter = compute_brand_letter(
+                self.brand_name, self.brand_name_en  # type: ignore[arg-type]
+            )
         super().save(*args, **kwargs)
 
     class Meta:

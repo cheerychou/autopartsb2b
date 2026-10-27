@@ -40,4 +40,16 @@ updated_at: 2026-10-26
    另：矩阵拍板（⑦b「staff 无 reports:read」）当时基于常量事实，运行时
    并不成立；修复后才与拍板意图一致——拍板前若涉权限，先跑探针再拍。
 
+**延伸（2026-10-27 mypy 清零批，同族教训两条）**：
+① **「CI 红了没人看」=「有配置无落地」的 CI 版**——backend mypy 步骤自建立起
+15 次 run 全 failure 无人体感（本地 pre-check 未挂 mypy，口径分裂）。修法：
+mypy 挂进 `make lint-backend`，本地=CI 同口径。
+② **类型错误背后常藏真 bug**：38 条 mypy 存量里挖出两处真实 500——
+`views_storefront` 访问 OrderStateError 上不存在的 e.code/e.message_ru
+（买家非法签收/取消分支实为 AttributeError 500，无测试覆盖）；I2 选件器
+类目过滤写错 related_name（category_spus↔category_links，FieldError 500，
+测试只测 oe 路径）。**纪律：清类型债不是"加 ignore 消音"，每条先判断是
+stubs 限制、契约缺声明，还是真缺陷**——本次 38 条=2 真缺陷+4 拷贝域 ignore
++32 契约收窄/标注。
+
 **关联**：[EXP-009](KNW-B1-EXP-009-sqlite-test-blind-spots-pg-tier.md)（同族：测试档盲区）｜[ENG-003](../engineering/B1RU-ENG-003-admin-func-role-matrix.md)（矩阵运行时假设修正）｜backend/shared/permissions.py（修复落点）

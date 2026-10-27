@@ -9,6 +9,8 @@ create_product_from_catalog，限时价 30 天窗口）→ 上架 → F-12 入�
     ./venv/bin/python manage.py seed_demo_commerce
 """
 
+from typing import Any
+
 from django.core.management.base import BaseCommand, CommandError
 
 from catalog.models_pack_log import CatalogPackLog
@@ -17,7 +19,7 @@ from commerce.models_product import InventoryTransaction, Product
 from commerce.services import create_product_from_catalog, record_inventory
 
 # 演示可售位：前刹车片（按车找件主推位）+ 机油滤（OE 检索/交叉号位）
-DEMO_OFFERS = [
+DEMO_OFFERS: list[dict[str, Any]] = [
     {
         "spu_code": "DM00001",
         "title_ru": "Колодки тормозные передние Chery Tiggo 7",

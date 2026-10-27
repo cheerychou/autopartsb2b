@@ -40,6 +40,7 @@ test-frontend: ## 前端两应用测试
 lint: lint-backend lint-frontend ## 全量 lint
 lint-backend:
 	cd $(BACKEND_DIR) && ./venv/bin/black --check --line-length=100 . && ./venv/bin/isort --check-only . && ./venv/bin/flake8 .
+	cd $(BACKEND_DIR) && ./venv/bin/mypy catalog commerce shared config
 lint-frontend:
 	cd $(FRONTEND_DIR) && pnpm -r lint
 

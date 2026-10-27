@@ -225,7 +225,7 @@ def _bind_pack_uuids(entity: str, rows):
     for r in rows:
         model, code_field, pk_field, skeleton_fields = UUID_BINDINGS[entity]
         code, pk = r.get(code_field), r.get(pk_field)
-        if not (code and pk) or model.objects.filter(**{code_field: code}).exists():
+        if not (code and pk) or model.objects.filter(**{code_field: code}).exists():  # type: ignore
             continue
         kwargs = {}
         for f in skeleton_fields:
@@ -238,11 +238,11 @@ def _bind_pack_uuids(entity: str, rows):
                 kwargs[f] = value  # 非 FK 字段名——attname/冗余列，原样透传（字符串即可）
                 continue
             if field.is_relation:
-                value = field.remote_field.model.objects.get(pk=value)
+                value = field.remote_field.model.objects.get(pk=value)  # type: ignore[union-attr]
                 kwargs[field.name] = value  # FK 字段名走描述符（实例校验），勿塞 attname
             else:
                 kwargs[f] = value
-        model.objects.create(**{code_field: code, pk_field: pk, **kwargs})
+        model.objects.create(**{code_field: code, pk_field: pk, **kwargs})  # type: ignore
 
 
 def _import_vehicle_series(rows):

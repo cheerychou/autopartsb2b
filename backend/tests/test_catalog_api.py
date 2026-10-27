@@ -168,6 +168,18 @@ def test_i2_picker_candidates(seed_data):
     assert resp.json()["data"][0]["spu_id"] == str(d["spu"].spu_id)
 
 
+def test_i2_picker_by_category(seed_data):
+    """类目过滤守卫：SPU 侧反向名=category_links（回归：曾误写 category_spus 致 FieldError 500）。"""
+    from catalog.models_category import CategorySPU
+
+    d = seed_data
+    CategorySPU.objects.create(category=d["category"], spu=d["spu"], is_primary=True)
+    resp = client.get(f"/catalog/v1/picker/candidates?category_id={d['category'].category_id}")
+    assert resp.status_code == 200
+    ids = [r["spu_id"] for r in resp.json()["data"]]
+    assert str(d["spu"].spu_id) in ids
+
+
 def test_pack_log_current_version_default():
     assert CatalogPackLog.current_version() == "unknown"
 

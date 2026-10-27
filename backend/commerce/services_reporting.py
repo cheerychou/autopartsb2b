@@ -76,20 +76,23 @@ def payment_flows(date_from=None, date_to=None) -> dict:
         qs = qs.filter(payment_confirmed_at__date__gte=date_from)
     if date_to:
         qs = qs.filter(payment_confirmed_at__date__lte=date_to)
-    rows = [
-        {
-            "order_no": o.order_no,
-            "buyer": o.account.user.username,
-            "company_name_ru": o.account.company_name_ru,
-            "payment_method": o.payment_method,
-            "amount": str(o.total_amount),
-            "confirmed_at": o.payment_confirmed_at.isoformat(),
-            "confirmed_by": o.payment_confirmed_by.username if o.payment_confirmed_by else "",
-            "note": o.payment_note,
-            "order_status": o.status,
-        }
-        for o in qs.order_by("-payment_confirmed_at")
-    ]
+    rows = []
+    for o in qs.order_by("-payment_confirmed_at"):
+        confirmed_at = o.payment_confirmed_at
+        assert confirmed_at is not None  # 查询已过滤 isnull=False（mypy 收窄）
+        rows.append(
+            {
+                "order_no": o.order_no,
+                "buyer": o.account.user.username,
+                "company_name_ru": o.account.company_name_ru,
+                "payment_method": o.payment_method,
+                "amount": str(o.total_amount),
+                "confirmed_at": confirmed_at.isoformat(),
+                "confirmed_by": o.payment_confirmed_by.username if o.payment_confirmed_by else "",
+                "note": o.payment_note,
+                "order_status": o.status,
+            }
+        )
     total = qs.aggregate(total=Sum("total_amount"))["total"]
     amount = (total or Decimal("0")).quantize(Decimal("0.01"))
     return {"rows": rows, "count": len(rows), "total_amount": str(amount)}
