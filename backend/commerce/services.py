@@ -17,7 +17,10 @@ class CatalogRefError(Exception):
 
 
 def next_product_code() -> str:
-    """商品编码：P + 自增序（v1 简单实现；并发由 unique 约束兜底重试）。"""
+    """商品编码：P + 自增序（v1 简单实现，无重试——exists 检查与 create 之间存在
+    并发窗口，撞号由 unique 约束拒绝为 500。管理端低频操作，与订单号
+    _next_order_no 的 savepoint 重试模式不同：后者是买家侧高频路径）。
+    走查 P2#7 同族注释一致化（评审 P3 2026-10-27）。"""
     seq = Product.objects.count() + 1
     while Product.objects.filter(product_code=f"P{seq:06d}").exists():
         seq += 1

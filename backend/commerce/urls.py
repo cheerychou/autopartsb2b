@@ -17,6 +17,8 @@ urlpatterns = [path("", include(router.urls))]
 storefront_patterns = [
     path("auth/register", views_storefront.register),
     path("auth/login", views_storefront.login),
+    # 买家端 access 续期（评审 P1：SimpleJWT refresh 与管理端同机制；rotation 关）
+    path("auth/token/refresh", TokenRefreshView.as_view()),
     path("store/products/<uuid:spu_id>", views_storefront.store_product),
     path("store/search/oe", views_storefront.store_search_oe),
     path("cart", views_storefront.cart_view),

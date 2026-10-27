@@ -80,3 +80,9 @@ updated_at: 2026-10-25
 
 > 拷贝纪律说明：`type: ignore` 行注释不触碰模型结构与导入逻辑，属「接入适配」级最小侵入；
 > 对应上游（CDD3 data_platform）若未来同步，此 4 行注释随行携带、不产生合并冲突面。
+
+## 剔除（2026-10-27，QA 评审 P3）
+
+| 来源 | 剔除物 | 理由 |
+|---|---|---|
+| b1-shared-http/src/auth-client.ts + __tests__/auth-client.test.ts + index.ts 导出 | 整文件删除 | CDD3 session 模型（/auth/token/、tenant、双信封）与本仓 SimpleJWT Bearer 契约完全不符；两端零消费；留存会误导后来者当认证入口。401 刷新走 client.ts 既有拦截器（refreshToken 回调 opt-in，两端已于 2026-10-27 接线） |

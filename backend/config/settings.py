@@ -6,6 +6,7 @@ B1-RU Django settings（单租户运行；私有化部署）。
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +38,21 @@ if _IS_PROD:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
 else:
     ALLOWED_HOSTS = ["*"]  # 开发档；production 由上方 fail-safe 强制显式配置
+
+# JWT 会话寿命（评审 P1 2026-10-27：SimpleJWT 默认 access 仅 5 分钟——买家对公下单/
+# 管理端核销等长操作中途必掉线，且前端 401 即清会话）。access 60min + refresh 7d；
+# rotation 关闭（前端仅续 access；rotation 留 httpOnly cookie 化时一并裁定，EA-SEC-011）。
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+}
+
+# production TLS/Cookie 加固（评审 P3 2026-10-27 登记，未开启——部署形态决策点：
+# 反代是否 TLS 终止未知时盲开 HSTS/SSL_REDIRECT 有反噬风险；随 token httpOnly 化
+# （EA-SEC-011 过渡态收口）一并裁定并在此启用：
+#   SECURE_PROXY_SSL_HEADER / SECURE_SSL_REDIRECT / SECURE_HSTS_SECONDS /
+#   SESSION_COOKIE_SECURE / CSRF_COOKIE_SECURE / SECURE_HSTS_INCLUDE_SUBDOMAINS
 
 INSTALLED_APPS = [
     "django.contrib.admin",

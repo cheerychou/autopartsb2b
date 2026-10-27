@@ -62,8 +62,22 @@ class Product(models.Model):
         # 评审二节：若一对一是有意设计就该上 unique）
         constraints = [
             models.UniqueConstraint(fields=["catalog_spu_id"], name="uniq_product_catalog_spu"),
+            # 资金域口径（评审 P2 2026-10-27）：负价/零价不得上架成交——serializer
+            # min_value 之外的最后防线（绕过 API 的 ORM 直写同样被拒）
+            # Django 5.0 名 check=（stubs 按 5.1 condition）
+            models.CheckConstraint(  # type: ignore[call-arg]
+                check=models.Q(price_amount__gt=0), name="ck_product_price_positive"
+            ),
         ]
         indexes = [models.Index(fields=["catalog_spu_id"]), models.Index(fields=["is_listed"])]
+
+    def save(self, *args, **kwargs):
+        # 首次上架留痕（评审 P2 尾巴：listed_at 此前全仓无写入点；下架不清留审计）
+        if self.is_listed and self.listed_at is None:
+            from django.utils import timezone
+
+            self.listed_at = timezone.now()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.product_code} · {self.title_ru}"

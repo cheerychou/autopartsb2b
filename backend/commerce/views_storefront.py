@@ -12,6 +12,7 @@
 import uuid
 from decimal import Decimal
 
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -76,14 +77,18 @@ def register(request):
     d = s.validated_data
     if User_exists(d["username"]):
         return err(409, "USERNAME_TAKEN")
-    account = register_buyer(
-        username=d["username"],
-        password=d["password"],
-        phone=d["phone"],
-        buyer_type=d["buyer_type"],
-        company_name_ru=d["company_name_ru"],
-        inn=d["inn"],
-    )
+    try:
+        account = register_buyer(
+            username=d["username"],
+            password=d["password"],
+            phone=d["phone"],
+            buyer_type=d["buyer_type"],
+            company_name_ru=d["company_name_ru"],
+            inn=d["inn"],
+        )
+    except IntegrityError:
+        # 并发同名兜底（评审 P3 2026-10-27）：前置 check 与 create 之间的窗口
+        return err(409, "USERNAME_TAKEN")
     refresh = RefreshToken.for_user(account.user)
     # P3（meta 时序修正）：注册响应的 meta 反映刚注册的形态（原 resolve_buyer(request)
     # 在 token 未挂请求时恒为 guest，与 data 自相矛盾）
@@ -205,8 +210,7 @@ def store_product(request, spu_id: uuid.UUID):
             "price": None,
         }
         if buyer.can_see_price:
-            expired = product.price_expires_at and product.price_expires_at < timezone_now()
-            offer["price"] = None if expired else str(product.price_amount)
+            offer["price"] = str(product.price_amount) if _price_visible(product) else None
             offer["price_expires_at"] = product.price_expires_at.isoformat()
         data["offer"] = offer
     return Response({"data": data, "meta": _buyer_meta(request, buyer)})
@@ -216,6 +220,17 @@ def timezone_now():
     from django.utils import timezone
 
     return timezone.now()
+
+
+def _price_visible(product) -> bool:
+    """价格展示门控（评审 P3 2026-10-27）：过期**与未生效**均不可见——
+    展示与成交口径一致（此前只挡过期，未生效价展示后下单才被 PRICE_NOT_ACTIVE 拒）。"""
+    now = timezone_now()
+    if product.price_expires_at and product.price_expires_at < now:
+        return False
+    if product.price_starts_at and product.price_starts_at > now:
+        return False
+    return True
 
 
 @api_view(["GET"])
@@ -229,23 +244,32 @@ def store_search_oe(request):
     direct, xref = catalog_query.search_oe(q)
     catalog_query.attach_entity_names("spu", direct)
     catalog_query.attach_entity_names("spu", xref)
+    # 批量预挂可售商品（评审 P3 2026-10-27：原逐 SPU 查询为 N+1，违背 CLAUDE.md 明文）
+    spu_ids = [s.spu_id for s in direct] + [s.spu_id for s in xref]
+    products = {
+        p.catalog_spu_id: p
+        for p in Product.objects.filter(
+            catalog_spu_id__in=spu_ids, is_listed=True
+        ).prefetch_related("inventory")
+    }
     return Response(
         {
             "data": {
-                "direct": [_attach_offer(spu, buyer) for spu in direct],
-                "cross_reference": [_attach_offer(spu, buyer) for spu in xref],
+                "direct": [_attach_offer(spu, buyer, products.get(spu.spu_id)) for spu in direct],
+                "cross_reference": [
+                    _attach_offer(spu, buyer, products.get(spu.spu_id)) for spu in xref
+                ],
             },
             "meta": _buyer_meta(request, buyer, len(direct) + len(xref)),
         }
     )
 
 
-def _attach_offer(spu, buyer) -> dict:
+def _attach_offer(spu, buyer, product=None) -> dict:
     from catalog.views import SpuCard
 
     card = SpuCard(spu).data
-    product = Product.objects.filter(catalog_spu_id=spu.spu_id, is_listed=True).first()
-    if not product:
+    if product is None:
         card["offer"] = None
         return card
     offer = {
@@ -254,9 +278,7 @@ def _attach_offer(spu, buyer) -> dict:
         "quantity_available": getattr(getattr(product, "inventory", None), "quantity_available", 0),
         "price": None,
     }
-    if buyer.can_see_price and not (
-        product.price_expires_at and product.price_expires_at < timezone_now()
-    ):
+    if buyer.can_see_price and _price_visible(product):
         offer["price"] = str(product.price_amount)
     card["offer"] = offer
     return card

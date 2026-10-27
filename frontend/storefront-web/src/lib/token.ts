@@ -24,9 +24,29 @@ export function setToken(token: string): void {
   }
 }
 
+
+const REFRESH_KEY = "b1ru_auth_refresh";
+
+export function getRefreshToken(): string | null {
+  try {
+    return localStorage.getItem(REFRESH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setRefreshToken(token: string): void {
+  try {
+    localStorage.setItem(REFRESH_KEY, token);
+  } catch {
+    /* 隐私模式等场景忽略 */
+  }
+}
+
 export function clearToken(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
   } catch {
     /* 忽略 */
   }

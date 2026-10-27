@@ -53,6 +53,12 @@ class AdminTokenObtainPairView(TokenObtainPairView):
 class ProductSerializer(serializers.ModelSerializer):
     """写用重 serializer（校验全）。读端点复用（v1 字段集一致，S4 拆读写）。"""
 
+    # 正价约束（评审 P2 2026-10-27）：基类声明=create/update 同拦；ORM 直写由
+    # CheckConstraint（models_product）兜底
+    price_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, min_value=Decimal("0.01")
+    )
+
     class Meta:
         model = Product
         fields = [

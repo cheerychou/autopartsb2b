@@ -243,11 +243,14 @@ def picker_candidates(*, model_id=None, oe=None, category_id=None, q=None, verif
     if q:
         qs = qs.filter(spu_name__icontains=q)
     if model_id:
-        qs = qs.filter(fitments__submodel_id=model_id).distinct()
         if verified_only:
-            qs = (
-                qs.exclude(fitments__verified_status="unverified")
-                .filter(fitments__verified_status="verified")
-                .distinct()
-            )
+            # 仅要求「当前车型存在已验证适配行」（29号§六语义）。修复（评审 P2
+            # 2026-10-27）：原 exclude(unverified) 是行级排除——SPU 在**任意车型**
+            # 有一条未验证行即整体隐藏，与注释宣称的「仅排除只有未验证行的 SPU」
+            # 不符，数据员补录会令在售商品从选件器消失
+            qs = qs.filter(
+                fitments__submodel_id=model_id, fitments__verified_status="verified"
+            ).distinct()
+        else:
+            qs = qs.filter(fitments__submodel_id=model_id).distinct()
     return qs.order_by("spu_code")

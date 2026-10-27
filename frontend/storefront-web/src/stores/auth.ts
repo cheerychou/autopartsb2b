@@ -2,7 +2,7 @@
 import { create } from "zustand";
 
 import { api, errCode } from "@/lib/api";
-import { clearToken, getToken, setToken } from "@/lib/token";
+import { clearToken, getToken, setRefreshToken, setToken } from "@/lib/token";
 
 export type BuyerKind = "guest" | "individual" | "corporate";
 
@@ -45,7 +45,9 @@ function sessionFromLogin(data: {
 }
 
 export const useAuth = create<AuthState>((set) => ({
-  loggedIn: false,
+  // 初始即读 token（与 admin 同款竞态修复：路由守卫首渲染早于 bootstrap effect，
+  // 初始 false 会把已登录用户弹回 /login——e2e corporate-flow 实证）
+  loggedIn: Boolean(getToken()),
   kind: "guest",
   username: "",
   verificationStatus: null,
@@ -64,6 +66,7 @@ export const useAuth = create<AuthState>((set) => ({
     const body = resp.data as {
       data: {
         access: string;
+        refresh: string;
         buyer_kind: BuyerKind;
         can_see_price: boolean;
         can_order: boolean;
@@ -71,6 +74,7 @@ export const useAuth = create<AuthState>((set) => ({
       };
     };
     setToken(body.data.access);
+    setRefreshToken(body.data.refresh);
     set({ loggedIn: true, ...sessionFromLogin(body.data), username });
   },
 
@@ -85,9 +89,10 @@ export const useAuth = create<AuthState>((set) => ({
         inn: input.inn,
       });
       const body = resp.data as {
-        data: { access: string; buyer_kind: BuyerKind; verification_status: string };
+        data: { access: string; refresh: string; buyer_kind: BuyerKind; verification_status: string };
       };
       setToken(body.data.access);
+      setRefreshToken(body.data.refresh);
       set({
         loggedIn: true,
         kind: body.data.buyer_kind,
@@ -103,7 +108,7 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    clearToken();
+    clearToken(); // 内部已顺带清 refresh（token.ts）
     set({
       loggedIn: false,
       kind: "guest",

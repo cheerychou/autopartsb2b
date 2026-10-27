@@ -2,7 +2,7 @@
 import { create } from "zustand";
 
 import { api, errCode } from "@/lib/api";
-import { clearToken, getToken, setToken } from "@/lib/token";
+import { clearToken, getToken, setRefreshToken, setToken } from "@/lib/token";
 
 interface AdminAuth {
   loggedIn: boolean;
@@ -23,7 +23,9 @@ export const useAdminAuth = create<AdminAuth>((set) => ({
   login: async (username, password) => {
     try {
       const resp = await api.post("/auth/token", { username, password });
-      setToken((resp.data as { access: string }).access);
+      const body = resp.data as { access: string; refresh: string };
+      setToken(body.access);
+      setRefreshToken(body.refresh);
       set({ loggedIn: true, username });
     } catch (e) {
       if (errCode(e) === "NOT_ADMIN_ACCOUNT") throw new Error("notAdmin");
@@ -31,7 +33,7 @@ export const useAdminAuth = create<AdminAuth>((set) => ({
     }
   },
   logout: () => {
-    clearToken();
+    clearToken(); // 内部已顺带清 refresh（token.ts）
     set({ loggedIn: false, username: "" });
   },
 }));
