@@ -34,8 +34,10 @@ jobs:
           flake8 --max-line-length=100 --extend-ignore=E203,W503 .
       - name: 类型检查（mypy core）
         run: mypy catalog commerce shared config
-      - name: 测试（含 coverage 基线）
-        run: pytest --cov=catalog --cov=commerce --cov=shared --cov-report=term
+      - name: 测试（含 coverage 基线；封闭 SQLite 档=本地 make test-backend 同口径）
+        run: |
+          export B1RU_TEST_SQLITE=1 B1RU_AUTH_THROTTLE_RATE=10000/min
+          pytest --cov=catalog --cov=commerce --cov=shared --cov-report=term
       # coverage-baseline 校验随 S1 接入（首批代码落库后定基线）
 
   frontend:
