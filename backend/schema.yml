@@ -1067,6 +1067,33 @@ paths:
       responses:
         '200':
           description: No response body
+  /storefront/v1/auth/token/refresh:
+    post:
+      operationId: storefront_v1_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - storefront
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
   /storefront/v1/cart:
     get:
       operationId: storefront_v1_cart_retrieve
@@ -1632,7 +1659,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
-          title: 限时价(₽)
         gtin:
           type: string
           maxLength: 14
@@ -1675,7 +1701,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
-          title: 限时价(₽)
         price_starts_at:
           type: string
           format: date-time
@@ -1733,7 +1758,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
-          title: 限时价(₽)
         gtin:
           type: string
           maxLength: 14
@@ -1779,7 +1803,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
-          title: 限时价(₽)
         price_starts_at:
           type: string
           format: date-time
@@ -1836,7 +1859,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
-          title: 限时价(₽)
         gtin:
           type: string
           maxLength: 14
