@@ -1,7 +1,8 @@
 #!/bin/sh
-# B1-RU 后端容器入口：等库→迁移→静态→RBAC→可选超管→gunicorn
+# B1-RU 后端容器入口：等库→迁移→RBAC→可选超管→gunicorn
 # 纪律：迁移只向前兼容（24号§六.1）；任何一步失败即退出（fail-fast，生产档由
 # config/settings fail-safe 拒绝缺配置启动）。
+# 静态产物在镜像构建期 collectstatic（Dockerfile；whitenoise 服务）——运行时不重复。
 set -e
 cd /app
 
@@ -30,7 +31,6 @@ sys.exit(1)
 EOF
 
 python manage.py migrate --noinput
-python manage.py collectstatic --noinput
 python manage.py init_rbac
 
 # 可选：容器首启建运维超管（生产建议用 --assign 入 owner 组后禁用此账号或改密）

@@ -28,6 +28,10 @@ services:
       DJANGO_ENV: production
       PGHOST: db
       PGPORT: "5432"
+    volumes:
+      # 交付物目录（数据包 zip / license.json）：宿主 deploy/data/ → 容器 /data（只读）
+      # 手册 §3；DoD1 断网演练同模式实证（demo → /packs:ro）
+      - ./data:/data:ro
     ports:
       - "${B1RU_PORT:-8000}:8000"
     depends_on:
@@ -35,4 +39,6 @@ services:
         condition: service_healthy
 
 volumes:
+  # 显式命名：备份命令（README §4）不随 compose 项目名/目录名漂移
   pgdata:
+    name: b1ru_pgdata

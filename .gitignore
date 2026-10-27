@@ -26,3 +26,5 @@ coverage/
 logs/
 backups/
 deploy/b1ru.env
+deploy/data/*
+!deploy/data/.gitkeep

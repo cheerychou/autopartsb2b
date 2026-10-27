@@ -1,0 +1,3 @@
+# 交付物放置目录（宿主视角）：目录数据包 zip、license.json 放此处，
+# 自动只读挂载为容器 /data（docker-compose.yml backend.volumes）。
+# 本目录不作为数据存储——业务数据唯一在 pgdata 卷（README §4）。

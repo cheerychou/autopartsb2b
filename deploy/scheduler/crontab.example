@@ -1,3 +1,5 @@
 # B1-RU F-11 限时价到期下价（D1-B 的 cron 备选——systemd timer 优先，见 b1ru-pricing-expiry.timer）
-# 安装：crontab -e 后追加；路径按交付实际调整
-*/15 * * * * cd /opt/b1ru/backend && ./venv/bin/python manage.py deactivate_expired_prices --quiet >> /var/log/b1ru/pricing-expiry.log 2>&1
+# 容器交付形态：经 docker compose exec 在 backend 容器内执行（宿主机无 venv——走查修正）。
+# 安装：crontab -e 后追加；路径按交付实际调整；执行用户须有 docker 权限。
+# -T：cron 无 tty 必需；exec 须带 --env-file（compose 插值只认显式指定）
+*/15 * * * * cd /opt/b1ru/deploy && /usr/bin/docker compose --env-file b1ru.env exec -T backend python manage.py deactivate_expired_prices --quiet >> /var/log/b1ru/pricing-expiry.log 2>&1
