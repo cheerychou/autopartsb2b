@@ -55,7 +55,7 @@ updated_at: 2026-10-26
 
 > S0–S5 评审遗留两项（search_oe 门控 / I1 schema 留档）已于 2026-10-26 收口：前者=SPU 级无 verified 语义（空转参数删除，语义落档 `catalog/services/query.py` search_oe docstring）；后者已被 schema.yml 入库+drift 检测机制覆盖（5ca1eff）。
 
-> **离线安装手册执行级走查已完成（2026-10-26）**：真起栈复演 §1→§4 全链（health/导入/license 四态/备份），抓到并修复四断链——备份卷名前缀漂移（空 tar 静默丢数据，compose 显式 `name: b1ru_pgdata`）、`--env-file` 不自动继承（手册统一约定+全命令补齐）、备份镜像 alpine 非交付清单（换 postgres:16-alpine）、systemd/cron 宿主 venv 假设（改 docker compose exec -T 容器形态）。交付物挂载 `deploy/data/ → /data:ro` 转正 DoD1 演练实测模式。详见 KNW-B1-EXP-016；deploy/ 变更属 P4 高危域已提请人工评审。
+> **离线安装手册执行级走查已完成（2026-10-26）**：真起栈复演 §1→§4 全链（health/导入/license 四态/备份），抓到并修复四断链——备份卷名前缀漂移（空 tar 静默丢数据，compose 显式 `name: b1ru_pgdata`）、`--env-file` 不自动继承（手册统一约定+全命令补齐）、备份镜像 alpine 非交付清单（换 postgres:16-alpine）、systemd/cron 宿主 venv 假设（改 docker compose exec -T 容器形态）。交付物挂载 `deploy/data/ → /data:ro` 转正 DoD1 演练实测模式。详见 KNW-B1-EXP-016；deploy/ 变更属 P4 高危域已提请人工评审。**✅ 人工评审通过（2026-10-27，委托方确认，commit `ecacbaf`）。**
 
 ## 五、结论
 
